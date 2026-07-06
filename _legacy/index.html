@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Nitai Mahat — Portfolio</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@300;400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <!-- Intro overlay: plays once on load, then reveals the hero -->
+  <div class="intro" id="intro">
+    <div class="intro__name" id="introName" aria-hidden="true">
+      <span>N</span><span>I</span><span>T</span><span>A</span><span>I</span>
+      <span class="intro__space">&nbsp;</span>
+      <span>M</span><span>A</span><span>H</span><span>A</span><span>T</span>
+    </div>
+    <div class="intro__bar"><div class="intro__bar-fill"></div></div>
+  </div>
+
+  <!-- Hero -->
+  <header class="hero" id="hero">
+    <div class="hero__bg">
+      <div class="orb orb--1"></div>
+      <div class="orb orb--2"></div>
+      <div class="grid-overlay"></div>
+    </div>
+
+    <nav class="nav">
+      <span class="nav__logo">NM</span>
+      <ul class="nav__links">
+        <li><a href="#work">Work</a></li>
+        <li><a href="#about">About</a></li>
+        <li><a href="#contact">Contact</a></li>
+      </ul>
+    </nav>
+
+    <div class="hero__inner">
+      <p class="hero__eyebrow reveal" style="--d:0.1s">Welcome to my portfolio</p>
+
+      <div class="hero__portrait reveal" style="--d:0.25s">
+        <div class="hero__portrait-ring"></div>
+        <img src="images/hero.jpg" alt="Portrait of Nitai Mahat" id="heroImg" />
+      </div>
+
+      <h1 class="hero__title">
+        <span class="hero__title-line reveal" style="--d:0.45s">NITAI</span>
+        <span class="hero__title-line reveal" style="--d:0.6s">MAHAT</span>
+      </h1>
+
+      <p class="hero__subtitle reveal" style="--d:0.8s">
+        Building things for the web — one pixel at a time.
+      </p>
+
+      <div class="hero__cta reveal" style="--d:0.95s">
+        <a href="#work" class="btn btn--primary">View Work</a>
+        <a href="#contact" class="btn btn--ghost">Get in Touch</a>
+      </div>
+    </div>
+
+    <div class="hero__scroll reveal" style="--d:1.2s">
+      <span>Scroll</span>
+      <div class="hero__scroll-line"></div>
+    </div>
+  </header>
+
+  <script src="script.js"></script>
+</body>
+</html>

@@ -1,26 +1,352 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #0b0b0f;
+  --background-soft: #14141b;
+  --foreground: #f2f2f5;
+  --muted: #9a9aa8;
+  --accent: #1f6b3b; /* green from the sneakers */
+  --accent-soft: #2f9457;
+  --maroon: #6e1f2a; /* maroon from the gazebo pillars */
 }
 
 @theme inline {
   --color-background: var(--background);
+  --color-background-soft: var(--background-soft);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-muted: var(--muted);
+  --color-accent: var(--accent);
+  --color-accent-soft: var(--accent-soft);
+  --color-maroon: var(--maroon);
+  --font-display: var(--font-display);
+  --font-body: var(--font-body);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  scroll-behavior: smooth;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-body), system-ui, sans-serif;
+  overflow-x: hidden;
+}
+
+/* Gradient text helper used by the hero title */
+.text-gradient {
+  background: linear-gradient(135deg, #ffffff 30%, var(--accent-soft) 120%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Ambient background fallback (behind the Spline scene) */
+.orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(90px);
+  opacity: 0.5;
+}
+.orb--accent {
+  width: 480px;
+  height: 480px;
+  background: var(--accent);
+  top: -120px;
+  left: -120px;
+  animation: float1 14s ease-in-out infinite;
+}
+.orb--maroon {
+  width: 420px;
+  height: 420px;
+  background: var(--maroon);
+  bottom: -140px;
+  right: -100px;
+  animation: float2 18s ease-in-out infinite;
+}
+.grid-overlay {
+  position: absolute;
+  inset: 0;
+  background-image: linear-gradient(
+      rgba(255, 255, 255, 0.03) 1px,
+      transparent 1px
+    ),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+  background-size: 60px 60px;
+  mask-image: radial-gradient(
+    ellipse 70% 60% at 50% 50%,
+    #000 40%,
+    transparent 100%
+  );
+}
+@keyframes float1 {
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+  50% {
+    transform: translate(80px, 60px);
+  }
+}
+@keyframes float2 {
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+  50% {
+    transform: translate(-70px, -50px);
+  }
+}
+
+/* Hide the native cursor for mouse users once the custom cursor is active */
+@media (pointer: fine) {
+  html.custom-cursor,
+  html.custom-cursor * {
+    cursor: none !important;
+  }
+}
+
+/* Drifting particles inside the glass menu cards */
+@keyframes cardParticle {
+  0%,
+  100% {
+    transform: translate(0, 0);
+    opacity: 0.12;
+  }
+  50% {
+    transform: translate(var(--dx), var(--dy));
+    opacity: var(--op, 0.7);
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   METEOR-FIELD PROJECT SECTION
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* ── Meteor card — the project "rock" floating in space ─────────────── */
+.meteor-card {
+  width: clamp(220px, 22vw, 300px);
+  transform-origin: center center;
+  animation: meteorDrift var(--meteor-drift-dur, 22s) ease-in-out var(--meteor-delay, 0s) infinite;
+  transition: filter 0.4s ease;
+}
+
+.meteor-card:hover {
+  animation-play-state: paused;
+  filter: brightness(1.15);
+}
+
+/* Slow, gentle drift in a figure-eight-ish path */
+@keyframes meteorDrift {
+  0% {
+    transform: translate(0, 0) rotate(0deg);
+  }
+  25% {
+    transform: translate(
+        calc(var(--meteor-drift-dist, 40px) * 0.7),
+        calc(var(--meteor-drift-dist, 40px) * -0.5)
+      )
+      rotate(calc(var(--meteor-sway, 2deg) * 0.5));
+  }
+  50% {
+    transform: translate(
+        var(--meteor-drift-dist, 40px),
+        calc(var(--meteor-drift-dist, 40px) * 0.3)
+      )
+      rotate(var(--meteor-sway, 2deg));
+  }
+  75% {
+    transform: translate(
+        calc(var(--meteor-drift-dist, 40px) * 0.3),
+        calc(var(--meteor-drift-dist, 40px) * 0.8)
+      )
+      rotate(calc(var(--meteor-sway, 2deg) * -0.5));
+  }
+  100% {
+    transform: translate(0, 0) rotate(0deg);
+  }
+}
+
+/* ── Meteor trail — the fiery streak behind each card ───────────────── */
+.meteor-trail {
+  width: 120px;
+  height: 3px;
+  right: 100%;
+  top: 50%;
+  transform: translateY(-50%) rotate(calc(var(--meteor-angle, 25deg) * -1));
+  border-radius: 999px;
+  opacity: 0;
+  transition: opacity 0.5s ease;
+}
+
+.meteor-card:hover .meteor-trail {
+  opacity: 0.7;
+  animation: trailPulse 1.8s ease-in-out infinite;
+}
+
+@keyframes trailPulse {
+  0%, 100% {
+    opacity: 0.4;
+    width: 100px;
+  }
+  50% {
+    opacity: 0.8;
+    width: 140px;
+  }
+}
+
+/* ── Sparkle dots embedded in the meteor card body ──────────────────── */
+.meteor-sparkle {
+  opacity: 0.2;
+  animation: sparkleFlicker 2.5s ease-in-out infinite;
+}
+
+@keyframes sparkleFlicker {
+  0%, 100% {
+    opacity: 0.15;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1.6);
+    box-shadow: 0 0 6px rgba(255, 255, 255, 0.9);
+  }
+}
+
+/* ── Star twinkle — background star field ───────────────────────────── */
+.star-twinkle {
+  animation: twinkle 4s ease-in-out infinite;
+}
+
+@keyframes twinkle {
+  0%, 100% {
+    opacity: var(--tw-opacity, 0.3);
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.4);
+  }
+}
+
+/* ── Shooting stars — streak across the background ──────────────────── */
+.shooting-star {
+  width: 2px;
+  height: 2px;
+  background: white;
+  border-radius: 50%;
+  box-shadow: 0 0 4px 1px rgba(255, 255, 255, 0.8);
+  opacity: 0;
+  animation: shootingStar 12s ease-in infinite;
+}
+
+@keyframes shootingStar {
+  0% {
+    opacity: 0;
+    transform: translate(0, 0) scale(1);
+  }
+  2% {
+    opacity: 1;
+  }
+  8% {
+    opacity: 0.9;
+    transform: translate(200px, 120px) scale(0.4);
+    box-shadow:
+      0 0 4px rgba(255, 255, 255, 0.9),
+      -80px -48px 2px rgba(255, 255, 255, 0.3),
+      -160px -96px 1px rgba(255, 255, 255, 0.1);
+  }
+  12% {
+    opacity: 0;
+    transform: translate(260px, 156px) scale(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(260px, 156px) scale(0);
+  }
+}
+
+/* ── Nebula drift — soft colored fog layers ─────────────────────────── */
+.nebula-drift {
+  animation: nebulaDrift 30s ease-in-out infinite;
+}
+.nebula-drift-reverse {
+  animation: nebulaDriftReverse 35s ease-in-out infinite;
+}
+
+@keyframes nebulaDrift {
+  0%, 100% {
+    transform: translate(0, 0) scale(1);
+    opacity: 0.6;
+  }
+  33% {
+    transform: translate(40px, -20px) scale(1.05);
+    opacity: 0.8;
+  }
+  66% {
+    transform: translate(-30px, 15px) scale(0.95);
+    opacity: 0.5;
+  }
+}
+
+@keyframes nebulaDriftReverse {
+  0%, 100% {
+    transform: translate(0, 0) scale(1);
+    opacity: 0.5;
+  }
+  33% {
+    transform: translate(-35px, 25px) scale(1.08);
+    opacity: 0.7;
+  }
+  66% {
+    transform: translate(25px, -15px) scale(0.92);
+    opacity: 0.4;
+  }
+}
+
+/* ── Reduced motion ─────────────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  .orb {
+    animation: none;
+  }
+  [style*="cardParticle"] {
+    animation: none !important;
+  }
+  .meteor-card {
+    animation: none;
+  }
+  .meteor-trail {
+    display: none;
+  }
+  .meteor-sparkle {
+    animation: none;
+  }
+  .star-twinkle {
+    animation: none;
+  }
+  .shooting-star {
+    display: none;
+  }
+  .nebula-drift,
+  .nebula-drift-reverse {
+    animation: none;
+  }
+}
+
+/* ── Scrollbar for modal content ────────────────────────────────────── */
+#projects ::-webkit-scrollbar {
+  width: 4px;
+}
+#projects ::-webkit-scrollbar-track {
+  background: transparent;
+}
+#projects ::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 999px;
+}
+#projects ::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.2);
 }
