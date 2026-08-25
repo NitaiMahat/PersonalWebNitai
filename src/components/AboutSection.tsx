@@ -11,10 +11,11 @@ import {
 import { useEffect, useRef, useState } from "react";
 import SpaceParticles from "@/components/SpaceParticles";
 
-function BookOrbit() {
+function BookOrbit({ isMobile }: { isMobile?: boolean }) {
+  const scale = isMobile ? 0.65 : 1;
   const rings = [
-    { count: 10, radius: 235, dur: 28, dir: 1 },
-    { count: 14, radius: 305, dur: 44, dir: -1 },
+    { count: 10, radius: 235 * scale, dur: 28, dir: 1 },
+    { count: 14, radius: 305 * scale, dur: 44, dir: -1 },
   ];
   return (
     <div className="pointer-events-none absolute left-1/2 top-1/2 z-0 -translate-x-1/2 -translate-y-1/2">
@@ -57,7 +58,7 @@ const draw = (active: boolean, delay = 0, duration = 1.3) => ({
 
 function NepalDrawing({ active }: { active: boolean }) {
   return (
-    <svg viewBox="0 0 160 110" className="h-28 w-44" fill="none">
+    <svg viewBox="0 0 160 110" className="h-20 sm:h-28 w-32 sm:w-44 max-h-[105px]" fill="none">
       <motion.circle
         cx="122" cy="34" r="13"
         stroke="#e0892f" strokeWidth="2.5"
@@ -85,7 +86,7 @@ function NepalDrawing({ active }: { active: boolean }) {
 
 function CollegeDrawing({ active }: { active: boolean }) {
   return (
-    <svg viewBox="0 0 160 110" className="h-28 w-44" fill="none">
+    <svg viewBox="0 0 160 110" className="h-20 sm:h-28 w-32 sm:w-44 max-h-[105px]" fill="none">
       <motion.path
         d="M22 50 L80 22 L138 50"
         stroke="#161616" strokeWidth="2.5" strokeLinejoin="round" strokeLinecap="round"
@@ -118,7 +119,7 @@ function MajorDrawing({ active }: { active: boolean }) {
     { x: 124, h: 44, c: "#e0892f" },
   ];
   return (
-    <svg viewBox="0 0 160 110" className="h-28 w-44" fill="none">
+    <svg viewBox="0 0 160 110" className="h-20 sm:h-28 w-32 sm:w-44 max-h-[105px]" fill="none">
       {/* monitor */}
       <motion.path
         d="M14 24 L78 24 L78 70 L14 70 Z"
@@ -160,7 +161,7 @@ function MajorDrawing({ active }: { active: boolean }) {
 
 function GpaDrawing({ active }: { active: boolean }) {
   return (
-    <svg viewBox="0 0 160 110" className="h-28 w-44" fill="none">
+    <svg viewBox="0 0 160 110" className="h-20 sm:h-28 w-32 sm:w-44 max-h-[105px]" fill="none">
       <motion.path
         d="M80 16 L92 44 L122 47 L99 67 L106 96 L80 80 L54 96 L61 67 L38 47 L68 44 Z"
         stroke="#e0892f" strokeWidth="2.5" strokeLinejoin="round" strokeLinecap="round"
@@ -198,7 +199,7 @@ function GpaDrawing({ active }: { active: boolean }) {
 /* ── Backend / systems ── */
 function BackendDrawing({ active }: { active: boolean }) {
   return (
-    <svg viewBox="0 0 160 110" className="h-28 w-44" fill="none">
+    <svg viewBox="0 0 160 110" className="h-20 sm:h-28 w-32 sm:w-44 max-h-[105px]" fill="none">
       {/* database cylinder */}
       <motion.ellipse cx="56" cy="32" rx="26" ry="8" stroke="#161616" strokeWidth="2.5" {...draw(active, 0.1, 0.9)} />
       <motion.path d="M30 32 L30 72" stroke="#161616" strokeWidth="2.5" strokeLinecap="round" {...draw(active, 0.4, 0.7)} />
@@ -226,7 +227,7 @@ function FullStackDrawing({ active }: { active: boolean }) {
     { cx: 46, c: "#1f6b3b" },
   ];
   return (
-    <svg viewBox="0 0 160 110" className="h-28 w-44" fill="none">
+    <svg viewBox="0 0 160 110" className="h-20 sm:h-28 w-32 sm:w-44 max-h-[105px]" fill="none">
       {/* browser window */}
       <motion.path d="M26 18 L134 18 L134 50 L26 50 Z" stroke="#161616" strokeWidth="2.5" strokeLinejoin="round" {...draw(active, 0.1, 1.1)} />
       <motion.path d="M26 28 L134 28" stroke="#161616" strokeWidth="2" {...draw(active, 0.6, 0.6)} />
@@ -249,7 +250,7 @@ function FullStackDrawing({ active }: { active: boolean }) {
 /* ── AI & research ── */
 function AiDrawing({ active }: { active: boolean }) {
   return (
-    <svg viewBox="0 0 160 110" className="h-28 w-44" fill="none">
+    <svg viewBox="0 0 160 110" className="h-20 sm:h-28 w-32 sm:w-44 max-h-[105px]" fill="none">
       {/* chip */}
       <motion.path d="M50 32 L110 32 L110 82 L50 82 Z" stroke="#161616" strokeWidth="2.5" strokeLinejoin="round" {...draw(active, 0.1, 1.1)} />
       {/* pins */}
@@ -273,7 +274,7 @@ function AiDrawing({ active }: { active: boolean }) {
 /* ── Soccer ── */
 function SoccerDrawing({ active }: { active: boolean }) {
   return (
-    <svg viewBox="0 0 160 110" className="h-28 w-44" fill="none">
+    <svg viewBox="0 0 160 110" className="h-20 sm:h-28 w-32 sm:w-44 max-h-[105px]" fill="none">
       <motion.circle cx="76" cy="56" r="30" stroke="#161616" strokeWidth="2.5" {...draw(active, 0.1, 1.3)} />
       <motion.path
         d="M76 42 L88 51 L83 65 L69 65 L64 51 Z"
@@ -295,7 +296,7 @@ function SoccerDrawing({ active }: { active: boolean }) {
 /* ── Purpose / ideas ── */
 function PurposeDrawing({ active }: { active: boolean }) {
   return (
-    <svg viewBox="0 0 160 110" className="h-28 w-44" fill="none">
+    <svg viewBox="0 0 160 110" className="h-20 sm:h-28 w-32 sm:w-44 max-h-[105px]" fill="none">
       <motion.circle cx="80" cy="44" r="22" stroke="#e0892f" strokeWidth="2.5" {...draw(active, 0.1, 1.1)} />
       <motion.path d="M74 44 L78 52 L82 42 L86 52" stroke="#1f6b3b" strokeWidth="2.5" strokeLinejoin="round" strokeLinecap="round" {...draw(active, 0.6, 0.9)} />
       <motion.path d="M68 66 L92 66 M70 74 L90 74 M74 82 L86 82" stroke="#161616" strokeWidth="2.5" strokeLinecap="round" {...draw(active, 0.9, 0.8)} />
@@ -310,7 +311,7 @@ function PurposeDrawing({ active }: { active: boolean }) {
 /* ── What's next / rocket ── */
 function NextDrawing({ active }: { active: boolean }) {
   return (
-    <svg viewBox="0 0 160 110" className="h-28 w-44" fill="none">
+    <svg viewBox="0 0 160 110" className="h-20 sm:h-28 w-32 sm:w-44 max-h-[105px]" fill="none">
       <motion.path
         d="M80 16 C92 28 92 50 88 64 L72 64 C68 50 68 28 80 16 Z"
         stroke="#161616" strokeWidth="2.5" strokeLinejoin="round" {...draw(active, 0.1, 1.3)}
@@ -394,15 +395,15 @@ function FinaleContent({
   onEnter: (e: React.MouseEvent) => void;
 }) {
   return (
-    <div className="flex h-full flex-col items-center justify-center gap-4 p-7 text-center text-[#2c2a26]">
-      <span className="font-display text-[0.6rem] uppercase tracking-[0.25em] text-[#161616]/50">
+    <div className="flex h-full flex-col items-center justify-center gap-3 sm:gap-4 p-5 sm:p-7 text-center text-[#2c2a26]">
+      <span className="font-display text-[0.55rem] sm:text-[0.6rem] uppercase tracking-[0.25em] text-[#161616]/50">
         Epilogue
       </span>
-      <div className="h-px w-12 bg-[#161616]/30" />
-      <p className="font-display text-[0.98rem] font-semibold leading-relaxed text-[#161616]">
+      <div className="h-px w-10 sm:w-12 bg-[#161616]/30" />
+      <p className="font-display text-[0.88rem] sm:text-[0.98rem] font-semibold leading-relaxed text-[#161616]">
         Every chapter you&apos;ve read shaped the engineer I am today.
       </p>
-      <p className="text-[0.82rem] leading-relaxed text-[#2c2a26]/80">
+      <p className="text-[0.75rem] sm:text-[0.82rem] leading-relaxed text-[#2c2a26]/80">
         Now it&apos;s time to see what I&apos;ve built.
       </p>
       <motion.button
@@ -410,7 +411,7 @@ function FinaleContent({
         onPointerDown={(e) => e.stopPropagation()}
         onPointerUp={(e) => e.stopPropagation()}
         data-cursor="open"
-        className="mt-2 rounded-full bg-[#16243f] px-5 py-2.5 font-display text-[0.68rem] uppercase tracking-[0.2em] text-white shadow-lg transition-transform hover:scale-105"
+        className="mt-1 sm:mt-2 rounded-full bg-[#16243f] px-4 sm:px-5 py-2 sm:py-2.5 font-display text-[0.62rem] sm:text-[0.68rem] uppercase tracking-[0.2em] text-white shadow-lg transition-transform hover:scale-105"
         animate={active ? { opacity: [0.65, 1, 0.65] } : { opacity: 1 }}
         transition={{ duration: 2.4, repeat: Infinity, ease: "easeInOut" }}
       >
@@ -431,19 +432,19 @@ function ChapterContent({
 }) {
   const { Drawing } = chapter;
   return (
-    <div className="flex h-full flex-col p-6 text-[#2c2a26]">
-      <span className="font-display text-[0.6rem] uppercase tracking-[0.25em] text-[#161616]/50">
+    <div className="flex h-full flex-col p-4 sm:p-6 text-[#2c2a26]">
+      <span className="font-display text-[0.55rem] sm:text-[0.6rem] uppercase tracking-[0.25em] text-[#161616]/50">
         Chapter {index + 1}
       </span>
-      <h3 className="mt-1 font-display text-xl font-bold text-[#161616]">
+      <h3 className="mt-0.5 sm:mt-1 font-display text-lg sm:text-xl font-bold text-[#161616]">
         {chapter.title}
       </h3>
-      <div className="my-3 h-px w-12 bg-[#161616]/30" />
+      <div className="my-2 sm:my-3 h-px w-10 sm:w-12 bg-[#161616]/30" />
       <div className="grid flex-1 place-items-center">
         <Drawing active={active} />
       </div>
-      <p className="text-[0.8rem] leading-relaxed">{chapter.text}</p>
-      <span className="mt-2 self-end text-[0.6rem] text-[#161616]/40">
+      <p className="text-[0.72rem] sm:text-[0.8rem] leading-relaxed">{chapter.text}</p>
+      <span className="mt-1 sm:mt-2 self-end text-[0.55rem] sm:text-[0.6rem] text-[#161616]/40">
         {index + 1} / {chapters.length}
       </span>
     </div>
@@ -455,7 +456,18 @@ export default function AboutSection() {
   const [open, setOpen] = useState(false);
   const [page, setPage] = useState(0);
   const [finishing, setFinishing] = useState(false);
+  const [windowWidth, setWindowWidth] = useState(1200);
   const reduce = useReducedMotion();
+
+  useEffect(() => {
+    setWindowWidth(window.innerWidth);
+    const onResize = () => setWindowWidth(window.innerWidth);
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
+
+  const isMobile = windowWidth < 640;
+  const isTablet = windowWidth >= 640 && windowWidth < 1024;
 
   const sectionRef = useRef<HTMLElement>(null);
   const inView = useInView(sectionRef, { margin: "200px" });
@@ -545,11 +557,18 @@ export default function AboutSection() {
     if (held < 280) advance(); // quick tap = one page
   };
 
+  // Calculate responsive open transforms:
+  // On desktop (>=1024): shift 150px right, scale 1.08
+  // On tablet (640-1023): shift 110px right, scale 0.95
+  // On mobile (<640): shift ~80px right, scale down dynamically so it fits width
+  const openScale = isMobile ? Math.min(0.84, Math.max(0.72, (windowWidth - 30) / 440)) : isTablet ? 0.95 : 1.08;
+  const openX = isMobile ? Math.min(90, Math.max(50, windowWidth * 0.22)) : isTablet ? 115 : 150;
+
   return (
     <section
       ref={sectionRef}
       id="about"
-      className="relative flex min-h-screen w-full items-center justify-center overflow-hidden bg-[#04040a] px-6 py-24"
+      className="relative flex min-h-screen w-full items-center justify-center overflow-hidden bg-[#04040a] px-3 sm:px-6 py-20 sm:py-24"
     >
       {inView && <SpaceParticles />}
       <div className="pointer-events-none absolute left-1/2 top-1/2 h-[60vmin] w-[60vmin] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(circle,rgba(157,78,221,0.18),transparent_70%)] blur-2xl" />
@@ -561,19 +580,19 @@ export default function AboutSection() {
           onMouseMove={handleMove}
           onMouseLeave={resetTilt}
         >
-          {inView && <BookOrbit />}
+          {inView && <BookOrbit isMobile={isMobile} />}
 
           <motion.div
             data-cursor={open ? "hold" : "open"}
-            className="relative z-10 h-[460px] w-[320px] cursor-pointer"
+            className="relative z-10 h-[420px] sm:h-[460px] w-[280px] sm:w-[320px] cursor-pointer touch-manipulation"
             style={{
               transformStyle: "preserve-3d",
               rotateX: open || finishing ? 0 : rotateX,
               rotateY: open || finishing ? 0 : rotateY,
             }}
             animate={{
-              scale: finishing ? 0.5 : open ? 1.08 : 1,
-              x: finishing ? 0 : open ? 150 : 0,
+              scale: finishing ? 0.5 : open ? openScale : 1,
+              x: finishing ? 0 : open ? openX : 0,
               y: reduce ? 0 : finishing ? -50 : open ? 0 : [0, -10, 0],
               opacity: finishing ? 0 : 1,
             }}
@@ -638,7 +657,7 @@ export default function AboutSection() {
                       backfaceVisibility: "hidden",
                     }}
                   >
-                    <div className="absolute inset-5 rounded-sm border border-[#161616]/10" />
+                    <div className="absolute inset-3 sm:inset-5 rounded-sm border border-[#161616]/10" />
                   </div>
                 </motion.div>
               );
@@ -663,25 +682,25 @@ export default function AboutSection() {
                     "repeating-linear-gradient(45deg, rgba(255,255,255,0.025) 0 2px, transparent 2px 4px), repeating-linear-gradient(-45deg, rgba(0,0,0,0.06) 0 2px, transparent 2px 4px)",
                 }}
               >
-                <div className="absolute inset-3 rounded-sm border border-white/30" />
-                <div className="absolute inset-[15px] rounded-sm border border-white/15" />
-                <div className="absolute left-1/2 top-7 -translate-x-1/2 h-4 w-4 rounded-full border border-white/50" />
-                <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-center">
-                  <p className="font-display text-sm tracking-[0.35em] text-white/90">
+                <div className="absolute inset-2.5 sm:inset-3 rounded-sm border border-white/30" />
+                <div className="absolute inset-[11px] sm:inset-[15px] rounded-sm border border-white/15" />
+                <div className="absolute left-1/2 top-5 sm:top-7 -translate-x-1/2 h-3.5 sm:h-4 w-3.5 sm:w-4 rounded-full border border-white/50" />
+                <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-center w-full px-4">
+                  <p className="font-display text-xs sm:text-sm tracking-[0.3em] sm:tracking-[0.35em] text-white/90">
                     THE STORY OF
                   </p>
-                  <p className="mt-2 font-display text-lg font-bold tracking-[0.15em] text-white">
+                  <p className="mt-1.5 sm:mt-2 font-display text-base sm:text-lg font-bold tracking-[0.12em] sm:tracking-[0.15em] text-white">
                     NITAI MAHAT
                   </p>
                 </div>
-                <div className="absolute bottom-9 left-1/2 flex -translate-x-1/2 items-center gap-2.5">
-                  <span className="font-display text-[0.65rem] tracking-[0.25em] text-white/80">
+                <div className="absolute bottom-7 sm:bottom-9 left-1/2 flex -translate-x-1/2 items-center gap-2 sm:gap-2.5">
+                  <span className="font-display text-[0.6rem] sm:text-[0.65rem] tracking-[0.2em] sm:tracking-[0.25em] text-white/80">
                     ABOUT
                   </span>
-                  <span className="grid h-10 w-10 place-items-center rounded-full border border-white/50 font-display text-sm text-white/90">
+                  <span className="grid h-8 w-8 sm:h-10 sm:w-10 place-items-center rounded-full border border-white/50 font-display text-xs sm:text-sm text-white/90">
                     NM
                   </span>
-                  <span className="font-display text-[0.65rem] tracking-[0.25em] text-white/80">
+                  <span className="font-display text-[0.6rem] sm:text-[0.65rem] tracking-[0.2em] sm:tracking-[0.25em] text-white/80">
                     ME
                   </span>
                 </div>
@@ -693,20 +712,20 @@ export default function AboutSection() {
                   backfaceVisibility: "hidden",
                 }}
               >
-                <div className="absolute inset-4 rounded-sm border border-white/10" />
+                <div className="absolute inset-3 sm:inset-4 rounded-sm border border-white/10" />
               </div>
             </motion.div>
           </motion.div>
         </div>
 
         {/* Controls */}
-        <div className="mt-12 flex h-8 items-center gap-4">
+        <div className="mt-10 sm:mt-12 flex h-9 sm:h-8 items-center gap-3 sm:gap-4">
           {open ? (
             <>
               <button
                 onClick={back}
                 disabled={page === 0}
-                className="grid h-8 w-8 place-items-center rounded-full border border-white/20 bg-white/5 text-foreground/80 backdrop-blur-md transition-colors hover:border-accent-soft/60 disabled:opacity-30"
+                className="grid h-9 w-9 sm:h-8 sm:w-8 place-items-center rounded-full border border-white/20 bg-white/5 text-base sm:text-sm text-foreground/80 backdrop-blur-md transition-colors hover:border-accent-soft/60 disabled:opacity-30 active:scale-95"
                 aria-label="Previous page"
               >
                 ‹
@@ -716,14 +735,14 @@ export default function AboutSection() {
                   setOpen(false);
                   setPage(0);
                 }}
-                className="rounded-full border border-white/20 bg-white/5 px-5 py-2 text-xs uppercase tracking-[0.2em] text-foreground/80 backdrop-blur-md transition-colors hover:border-accent-soft/60 hover:text-white"
+                className="rounded-full border border-white/20 bg-white/5 px-4 sm:px-5 py-2 text-[0.68rem] sm:text-xs uppercase tracking-[0.2em] text-foreground/80 backdrop-blur-md transition-colors hover:border-accent-soft/60 hover:text-white active:scale-95"
               >
                 Close book
               </button>
               <button
                 onClick={advance}
                 disabled={page === last}
-                className="grid h-8 w-8 place-items-center rounded-full border border-white/20 bg-white/5 text-foreground/80 backdrop-blur-md transition-colors hover:border-accent-soft/60 disabled:opacity-30"
+                className="grid h-9 w-9 sm:h-8 sm:w-8 place-items-center rounded-full border border-white/20 bg-white/5 text-base sm:text-sm text-foreground/80 backdrop-blur-md transition-colors hover:border-accent-soft/60 disabled:opacity-30 active:scale-95"
                 aria-label="Next page"
               >
                 ›
@@ -731,17 +750,17 @@ export default function AboutSection() {
             </>
           ) : (
             <motion.p
-              className="text-xs uppercase tracking-[0.25em] text-muted/70"
+              className="text-[0.7rem] sm:text-xs uppercase tracking-[0.22em] sm:tracking-[0.25em] text-muted/70"
               animate={{ opacity: [0.4, 1, 0.4] }}
               transition={{ duration: 2.4, repeat: Infinity, ease: "easeInOut" }}
             >
-              Click the book to open
+              Tap or click the book to open
             </motion.p>
           )}
         </div>
         {open && (
-          <p className="mt-3 text-[0.7rem] uppercase tracking-[0.2em] text-muted/50">
-            hold the book to flip through · or tap / use arrows
+          <p className="mt-3 text-[0.65rem] sm:text-[0.7rem] uppercase tracking-[0.18em] sm:tracking-[0.2em] text-muted/50 text-center px-4">
+            hold book to flip · or tap / use arrows
           </p>
         )}
       </div>

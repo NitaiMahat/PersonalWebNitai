@@ -2,23 +2,27 @@
 
 import { useEffect, useMemo, useState } from "react";
 
-/** White particles drifting across a dark backdrop. Client-only (uses
- *  Math.random) to avoid hydration mismatch. Shared by About & Experience. */
+function seededRand(seed: number) {
+  const x = Math.sin(seed * 9301 + 49297) * 49297;
+  return x - Math.floor(x);
+}
+
+/** White particles drifting across a dark backdrop. Shared by About & Experience. */
 export default function SpaceParticles({ count = 60 }: { count?: number }) {
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
 
   const dots = useMemo(
     () =>
-      Array.from({ length: count }).map(() => ({
-        left: Math.random() * 100,
-        top: Math.random() * 100,
-        size: 1 + Math.random() * 2.5,
-        op: 0.4 + Math.random() * 0.6,
-        dx: `${(Math.random() * 2 - 1) * 70}px`,
-        dy: `${(Math.random() * 2 - 1) * 70}px`,
-        dur: 10 + Math.random() * 14,
-        delay: Math.random() * 8,
+      Array.from({ length: count }).map((_, i) => ({
+        left: seededRand(i * 13 + 1) * 100,
+        top: seededRand(i * 17 + 2) * 100,
+        size: 1 + seededRand(i * 19 + 3) * 2.5,
+        op: 0.4 + seededRand(i * 23 + 4) * 0.6,
+        dx: `${(seededRand(i * 29 + 5) * 2 - 1) * 70}px`,
+        dy: `${(seededRand(i * 31 + 6) * 2 - 1) * 70}px`,
+        dur: 10 + seededRand(i * 37 + 7) * 14,
+        delay: seededRand(i * 41 + 8) * 8,
       })),
     [count]
   );

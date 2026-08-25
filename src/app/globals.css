@@ -350,3 +350,17 @@ body {
 #projects ::-webkit-scrollbar-thumb:hover {
   background: rgba(255, 255, 255, 0.2);
 }
+
+/* Hide scrollbar for clean horizontal filtering on mobile */
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-none {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Optimize touch interactions */
+* {
+  -webkit-tap-highlight-color: transparent;
+}

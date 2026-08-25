@@ -119,7 +119,7 @@ export default function ContactSection() {
     <section
       ref={sectionRef}
       id="contact"
-      className="relative flex min-h-screen w-full flex-col items-center justify-center overflow-hidden bg-[#050510] px-6 py-24"
+      className="relative flex min-h-screen w-full flex-col items-center justify-center overflow-hidden bg-[#050510] px-4 sm:px-6 py-20 sm:py-24"
     >
       {inView && <SpaceParticles count={50} />}
 
@@ -129,7 +129,7 @@ export default function ContactSection() {
 
       <div className="relative z-10 flex w-full max-w-3xl flex-col items-center text-center">
         <motion.p
-          className="font-display text-[0.7rem] uppercase tracking-[0.4em] text-accent-soft/70"
+          className="font-display text-[0.65rem] sm:text-[0.7rem] uppercase tracking-[0.35em] sm:tracking-[0.4em] text-accent-soft/70"
           initial={{ opacity: 0, y: 16 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
@@ -139,7 +139,7 @@ export default function ContactSection() {
         </motion.p>
 
         <motion.h2
-          className="mt-4 font-display text-3xl font-bold text-white md:text-5xl"
+          className="mt-3 sm:mt-4 font-display text-2xl sm:text-3xl md:text-5xl font-bold text-white"
           style={{ textShadow: "0 4px 30px rgba(0,0,0,0.6)" }}
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -150,7 +150,7 @@ export default function ContactSection() {
         </motion.h2>
 
         <motion.p
-          className="mt-4 max-w-md text-sm leading-relaxed text-muted"
+          className="mt-3 sm:mt-4 max-w-md text-xs sm:text-sm leading-relaxed text-muted px-2"
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
@@ -161,7 +161,7 @@ export default function ContactSection() {
         </motion.p>
 
         {/* channels */}
-        <div className="mt-12 flex w-full flex-col items-stretch justify-center gap-4 sm:flex-row sm:items-stretch">
+        <div className="mt-8 sm:mt-12 flex w-full flex-col items-stretch justify-center gap-3 sm:gap-4 sm:flex-row sm:items-stretch">
           {channels.map((c, i) => (
             <ChannelCard key={c.label} channel={c} index={i} />
           ))}
@@ -172,7 +172,7 @@ export default function ContactSection() {
           type="button"
           onClick={copyEmail}
           data-cursor="view"
-          className="pointer-events-auto mt-10 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/[0.04] px-5 py-2.5 text-[0.72rem] uppercase tracking-[0.2em] text-white/70 backdrop-blur-md transition-colors hover:border-accent-soft/60 hover:text-white"
+          className="pointer-events-auto mt-8 sm:mt-10 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/[0.04] px-4 sm:px-5 py-2 sm:py-2.5 text-[0.68rem] sm:text-[0.72rem] uppercase tracking-[0.2em] text-white/70 backdrop-blur-md transition-colors hover:border-accent-soft/60 hover:text-white"
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
           viewport={{ once: true }}
@@ -185,7 +185,7 @@ export default function ContactSection() {
           {copied ? "Copied to clipboard" : "Copy email address"}
         </motion.button>
 
-        <p className="mt-14 text-[0.65rem] uppercase tracking-[0.2em] text-white/25">
+        <p className="mt-12 sm:mt-14 text-[0.65rem] uppercase tracking-[0.2em] text-white/25">
           © 2026 Nitai Mahat
         </p>
       </div>

@@ -38,10 +38,13 @@ const menuVariants = {
   show: { transition: { staggerChildren: 0.12 } },
 };
 
+function seededRandHero(seed: number) {
+  const x = Math.sin(seed * 9301 + 49297) * 49297;
+  return x - Math.floor(x);
+}
+
 // A drifting particle aura that spills out around the label (not boxed in).
 function ParticleAura() {
-  // Particles use Math.random(), so only generate them on the client to avoid
-  // an SSR/client hydration mismatch.
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
 
@@ -52,18 +55,18 @@ function ParticleAura() {
       "rgba(157,78,221,",
       "rgba(123,47,247,",
     ];
-    return Array.from({ length: 18 }).map(() => {
-      const c = palette[Math.floor(Math.random() * palette.length)];
+    return Array.from({ length: 18 }).map((_, i) => {
+      const c = palette[Math.floor(seededRandHero(i * 7 + 1) * palette.length)];
       return {
-        left: Math.random() * 100,
-        top: Math.random() * 100,
-        size: 2 + Math.random() * 3,
-        color: c + (0.5 + Math.random() * 0.45) + ")",
-        dx: `${(Math.random() * 2 - 1) * 18}px`,
-        dy: `${(Math.random() * 2 - 1) * 18}px`,
-        op: 0.45 + Math.random() * 0.5,
-        dur: 4 + Math.random() * 5,
-        delay: Math.random() * 4,
+        left: seededRandHero(i * 11 + 2) * 100,
+        top: seededRandHero(i * 13 + 3) * 100,
+        size: 2 + seededRandHero(i * 17 + 4) * 3,
+        color: c + (0.5 + seededRandHero(i * 19 + 5) * 0.45) + ")",
+        dx: `${(seededRandHero(i * 23 + 6) * 2 - 1) * 18}px`,
+        dy: `${(seededRandHero(i * 29 + 7) * 2 - 1) * 18}px`,
+        op: 0.45 + seededRandHero(i * 31 + 8) * 0.5,
+        dur: 4 + seededRandHero(i * 37 + 9) * 5,
+        delay: seededRandHero(i * 41 + 10) * 4,
       };
     });
   }, []);
@@ -123,7 +126,7 @@ function ParticleNavItem({
       <motion.a
         href={href}
         data-cursor="view"
-        className="pointer-events-auto group relative flex items-center gap-2.5 rounded-full px-6 py-3"
+        className="pointer-events-auto group relative flex items-center gap-2 sm:gap-2.5 rounded-full px-4 py-2 sm:px-6 sm:py-3"
         animate={reduce ? undefined : { y: [0, -7, 0] }}
         transition={{
           duration: 4 + index * 0.5,
@@ -138,10 +141,10 @@ function ParticleNavItem({
         {/* the particle aura itself */}
         <ParticleAura />
 
-        <span className="relative z-10 font-display text-xs text-accent-soft/70">
+        <span className="relative z-10 font-display text-[0.65rem] sm:text-xs text-accent-soft/70">
           {n}
         </span>
-        <span className="relative z-10 whitespace-nowrap font-display text-base font-medium text-foreground/90 transition-colors duration-300 group-hover:text-white">
+        <span className="relative z-10 whitespace-nowrap font-display text-xs sm:text-sm md:text-base font-medium text-foreground/90 transition-colors duration-300 group-hover:text-white">
           {label}
         </span>
       </motion.a>
@@ -226,10 +229,10 @@ export default function Hero({ start }: { start: boolean }) {
   }, [start, reduce]);
 
   return (
-    <header className="pointer-events-none relative flex min-h-screen flex-col items-center justify-center overflow-hidden px-6 pb-16 pt-8 text-center">
+    <header className="pointer-events-none relative flex min-h-[100dvh] flex-col items-center justify-center overflow-hidden px-4 sm:px-6 pb-20 pt-16 sm:pt-8 text-center">
       {/* Top bar */}
-      <div className="pointer-events-none absolute inset-x-0 top-0 z-20 flex items-center justify-between px-[clamp(1.5rem,5vw,4rem)] py-6">
-        <span className="pointer-events-auto font-display text-xl font-bold tracking-[0.1em]">
+      <div className="pointer-events-none absolute inset-x-0 top-0 z-20 flex items-center justify-between px-[clamp(1.25rem,5vw,4rem)] py-5 sm:py-6">
+        <span className="pointer-events-auto font-display text-lg sm:text-xl font-bold tracking-[0.1em]">
           NM
         </span>
       </div>
@@ -243,7 +246,7 @@ export default function Hero({ start }: { start: boolean }) {
       >
         <motion.p
           variants={item}
-          className="mb-6 text-sm uppercase tracking-[0.25em] text-accent-soft"
+          className="mb-4 sm:mb-6 text-xs sm:text-sm uppercase tracking-[0.2em] sm:tracking-[0.25em] text-accent-soft"
         >
           Welcome to my portfolio
         </motion.p>
@@ -265,7 +268,7 @@ export default function Hero({ start }: { start: boolean }) {
                 alt=""
                 aria-hidden
                 draggable={false}
-                className="pointer-events-none absolute left-[1%] top-1/2 hidden h-[clamp(300px,46vh,500px)] w-auto -translate-y-1/2 object-contain opacity-[0.15] lg:block"
+                className="pointer-events-none absolute left-[1%] top-1/2 hidden h-[clamp(240px,42vh,500px)] w-auto -translate-y-1/2 object-contain opacity-[0.15] lg:block"
                 style={{ filter: "brightness(0) invert(1)" }}
               />
               {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -275,7 +278,7 @@ export default function Hero({ start }: { start: boolean }) {
                 alt=""
                 aria-hidden
                 draggable={false}
-                className="pointer-events-none absolute right-[1%] top-1/2 hidden h-[clamp(300px,46vh,500px)] w-auto -translate-y-1/2 object-contain opacity-[0.15] lg:block"
+                className="pointer-events-none absolute right-[1%] top-1/2 hidden h-[clamp(240px,42vh,500px)] w-auto -translate-y-1/2 object-contain opacity-[0.15] lg:block"
                 style={{ filter: "brightness(0) invert(1)" }}
               />
             </>
@@ -294,7 +297,7 @@ export default function Hero({ start }: { start: boolean }) {
             onDragEnd={snapToNearest}
             whileDrag={{ scale: 1.04 }}
             style={{ rotateX, rotateY, transformPerspective: 900 }}
-            className="pointer-events-auto group relative z-10 cursor-grab touch-none select-none active:cursor-grabbing"
+            className="pointer-events-auto group relative z-10 cursor-grab touch-pan-y select-none active:cursor-grabbing"
           >
             {/* hover glow halo */}
             <span className="pointer-events-none absolute inset-0 -z-10 rounded-[45%] bg-[radial-gradient(circle_at_50%_45%,rgba(157,78,221,0.55),transparent_65%)] opacity-0 blur-2xl transition-opacity duration-500 group-hover:opacity-100" />
@@ -306,7 +309,7 @@ export default function Hero({ start }: { start: boolean }) {
               className="transition-transform duration-500 group-hover:scale-[1.03]"
             >
               {imgFailed ? (
-                <div className="grid h-[clamp(300px,46vh,500px)] w-[280px] place-items-center rounded-2xl border border-dashed border-accent-soft/50 bg-background-soft p-4 text-center text-sm leading-relaxed text-muted">
+                <div className="grid h-[clamp(220px,36vh,480px)] w-[min(260px,75vw)] place-items-center rounded-2xl border border-dashed border-accent-soft/50 bg-background-soft p-4 text-center text-xs sm:text-sm leading-relaxed text-muted">
                   Add your photo to
                   <br />
                   <code className="text-xs text-accent-soft">
@@ -320,14 +323,14 @@ export default function Hero({ start }: { start: boolean }) {
                   alt="Nitai Mahat"
                   onError={() => setImgFailed(true)}
                   draggable={false}
-                  className="h-[clamp(300px,46vh,500px)] w-auto object-contain drop-shadow-[0_30px_50px_rgba(0,0,0,0.55)]"
+                  className="h-[clamp(220px,36vh,480px)] w-auto object-contain drop-shadow-[0_30px_50px_rgba(0,0,0,0.55)]"
                 />
               )}
               <div className="absolute -bottom-3 left-1/2 h-5 w-[55%] -translate-x-1/2 rounded-[50%] bg-black/60 blur-2xl" />
             </motion.div>
 
             {/* hint */}
-            <span className="pointer-events-none absolute -bottom-2 left-1/2 -translate-x-1/2 translate-y-1/2 whitespace-nowrap rounded-full border border-white/15 bg-white/10 px-4 py-1.5 text-xs uppercase tracking-[0.2em] text-foreground/90 opacity-0 backdrop-blur-md transition-all duration-300 group-hover:translate-y-full group-hover:opacity-100">
+            <span className="pointer-events-none absolute -bottom-2 left-1/2 -translate-x-1/2 translate-y-1/2 whitespace-nowrap rounded-full border border-white/15 bg-white/10 px-3 sm:px-4 py-1 sm:py-1.5 text-[0.65rem] sm:text-xs uppercase tracking-[0.2em] text-foreground/90 opacity-0 backdrop-blur-md transition-all duration-300 group-hover:translate-y-full group-hover:opacity-100">
               Drag me · click for About
             </span>
           </motion.a>
@@ -336,7 +339,7 @@ export default function Hero({ start }: { start: boolean }) {
         {/* Name */}
         <motion.h1
           variants={item}
-          className="-mt-4 flex flex-col font-display text-[clamp(2.4rem,11vw,5.5rem)] font-bold leading-[0.92] tracking-[0.02em]"
+          className="-mt-2 sm:-mt-4 flex flex-col font-display text-[clamp(2rem,9.5vw,5.5rem)] font-bold leading-[0.92] tracking-[0.02em]"
         >
           <span className="text-gradient">NITAI</span>
           <span className="text-gradient">MAHAT</span>
@@ -345,7 +348,7 @@ export default function Hero({ start }: { start: boolean }) {
 
       {/* Particle-themed menu — centered row below */}
       <motion.nav
-        className="pointer-events-none relative z-10 mt-12 flex flex-wrap items-center justify-center gap-x-6 gap-y-5"
+        className="pointer-events-none relative z-10 mt-8 sm:mt-12 flex flex-wrap items-center justify-center gap-x-3 gap-y-3 sm:gap-x-6 sm:gap-y-5 px-2"
         variants={menuVariants}
         initial="hidden"
         animate={expanded ? "show" : "hidden"}
@@ -357,14 +360,14 @@ export default function Hero({ start }: { start: boolean }) {
 
       {/* Scroll indicator */}
       <motion.div
-        className="absolute bottom-8 left-1/2 z-10 flex -translate-x-1/2 flex-col items-center gap-2.5 text-xs uppercase tracking-[0.2em] text-muted"
+        className="absolute bottom-4 sm:bottom-8 left-1/2 z-10 flex -translate-x-1/2 flex-col items-center gap-1.5 sm:gap-2.5 text-[0.65rem] sm:text-xs uppercase tracking-[0.2em] text-muted"
         initial={{ opacity: 0 }}
         animate={{ opacity: start ? 1 : 0 }}
         transition={{ delay: 1.3, duration: 0.8 }}
       >
         <span>Scroll</span>
         <motion.div
-          className="h-10 w-px bg-gradient-to-b from-accent-soft to-transparent"
+          className="h-8 sm:h-10 w-px bg-gradient-to-b from-accent-soft to-transparent"
           animate={{ scaleY: [0.6, 1, 0.6], opacity: [0.3, 1, 0.3] }}
           transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
         />

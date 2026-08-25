@@ -201,7 +201,8 @@ export default function ExperienceSection() {
         Follow the line — each stop lights up the story.
       </p>
 
-      <div ref={stageRef} className="relative z-10 w-full max-w-6xl" style={{ aspectRatio: "16 / 8" }}>
+      {/* Desktop Horizontal Circuit View (lg+) */}
+      <div ref={stageRef} className="relative z-10 hidden w-full max-w-6xl lg:block" style={{ aspectRatio: "16 / 8" }}>
         {size.w > 0 && (
           <svg className="pointer-events-none absolute inset-0 h-full w-full overflow-visible" viewBox={`0 0 ${size.w} ${size.h}`}>
             <defs>
@@ -324,7 +325,83 @@ export default function ExperienceSection() {
         </AnimatePresence>
       </div>
 
-      <p className="relative z-10 mt-10 text-[0.7rem] uppercase tracking-[0.2em] text-muted/50">
+      {/* Mobile & Tablet Vertical Timeline View (< lg) */}
+      <div className="relative z-10 block w-full max-w-xl lg:hidden">
+        {/* Glowing vertical conduit line */}
+        <div className="absolute bottom-6 left-6 top-6 w-0.5 -translate-x-1/2 bg-gradient-to-b from-[#2dd4bf] via-[#38bdf8] via-[#ec4899] to-[#f59e0b] opacity-40 shadow-[0_0_12px_rgba(56,189,248,0.5)]" />
+
+        <div className="space-y-8">
+          {exps.map((e, i) => (
+            <motion.div
+              key={i}
+              initial={{ opacity: 0, x: 20 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true, margin: "-10%" }}
+              transition={{ duration: 0.5, delay: i * 0.08 }}
+              className="relative flex items-start gap-4 sm:gap-6 pl-2"
+            >
+              {/* Timeline milestone node icon */}
+              <div
+                className="relative z-10 grid h-12 w-12 shrink-0 place-items-center rounded-2xl border bg-slate-950/90 shadow-lg"
+                style={{
+                  borderColor: `${e.color}88`,
+                  color: e.color,
+                  boxShadow: `0 0 20px ${e.color}44`,
+                }}
+              >
+                <div className="scale-75">{e.icon}</div>
+                <span
+                  className="absolute -right-0.5 -top-0.5 h-2 w-2 rounded-full"
+                  style={{ background: e.color, boxShadow: `0 0 8px ${e.color}` }}
+                />
+              </div>
+
+              {/* Card content */}
+              <div
+                className="flex-1 rounded-2xl border bg-white/[0.04] p-4 sm:p-5 shadow-xl backdrop-blur-xl transition-all duration-300"
+                style={{ borderColor: `${e.color}33` }}
+              >
+                <div className="flex flex-wrap items-center justify-between gap-1">
+                  <span
+                    className="font-display text-[0.62rem] sm:text-[0.68rem] font-bold uppercase tracking-[0.2em]"
+                    style={{ color: e.color }}
+                  >
+                    {e.period}
+                  </span>
+                  <span
+                    className="rounded-full px-2 py-0.5 text-[0.58rem] sm:text-[0.62rem] font-medium tracking-wider text-slate-300 border border-white/10 bg-white/5"
+                  >
+                    {e.org}
+                  </span>
+                </div>
+
+                <h3 className="mt-1.5 font-display text-sm sm:text-base font-bold text-white leading-snug">
+                  {e.role}
+                </h3>
+                <p className="mt-0.5 text-[0.7rem] sm:text-xs text-slate-400">
+                  {e.location}
+                </p>
+
+                <div className="my-2.5 h-px w-full bg-white/10" />
+
+                <ul className="space-y-1.5 sm:space-y-2">
+                  {e.bullets.map((b, bi) => (
+                    <li key={bi} className="flex gap-2 text-xs sm:text-[0.8rem] leading-relaxed text-slate-300">
+                      <span
+                        className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full"
+                        style={{ background: e.color }}
+                      />
+                      <span>{b}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+      </div>
+
+      <p className="relative z-10 mt-10 text-[0.7rem] uppercase tracking-[0.2em] text-muted/50 hidden lg:block">
         hover a tile to revisit its story
       </p>
     </section>

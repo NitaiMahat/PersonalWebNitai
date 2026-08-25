@@ -674,7 +674,7 @@ export default function MeteorField3D({
 
   const isMobile = windowWidth < 640;
   const isTablet = windowWidth >= 640 && windowWidth < 1024;
-  const cameraZ = isMobile ? 36 : isTablet ? 27 : 22;
+  const cameraZ = isMobile ? (windowWidth < 400 ? 32 : 30) : isTablet ? 25 : 22;
 
   useEffect(() => {
     const el = wrapRef.current;
@@ -685,7 +685,7 @@ export default function MeteorField3D({
   }, []);
 
   return (
-    <div ref={wrapRef} className="relative h-[78vh] sm:h-[82vh] md:h-[85vh] min-h-[500px] sm:min-h-[600px] md:min-h-[660px] w-full cursor-grab active:cursor-grabbing touch-none">
+    <div ref={wrapRef} className="relative h-[72vh] sm:h-[80vh] md:h-[85vh] min-h-[460px] sm:min-h-[580px] md:min-h-[660px] w-full cursor-grab active:cursor-grabbing touch-pan-y">
       <Canvas
         camera={{ position: [0, 0, cameraZ], fov: isMobile ? 48 : 45 }}
         dpr={isMobile ? [1, 1] : [1, 1.5]}
@@ -713,8 +713,8 @@ export default function MeteorField3D({
             />
           ))}
 
-          <Sparkles count={isMobile ? 30 : 50} scale={[30, 20, 15]} size={isMobile ? 2 : 3} speed={reduce ? 0 : 0.35} opacity={0.65} color="#e0f2fe" />
-          <Stars radius={110} depth={60} count={isMobile ? 400 : 800} factor={4.5} fade speed={reduce ? 0 : 0.4} />
+          <Sparkles count={isMobile ? 24 : 50} scale={[30, 20, 15]} size={isMobile ? 2 : 3} speed={reduce ? 0 : 0.35} opacity={0.65} color="#e0f2fe" />
+          <Stars radius={110} depth={60} count={isMobile ? 350 : 800} factor={4.5} fade speed={reduce ? 0 : 0.4} />
         </Suspense>
 
         <OrbitControls
@@ -723,7 +723,7 @@ export default function MeteorField3D({
           enableZoom={false}
           enableDamping
           dampingFactor={0.08}
-          rotateSpeed={isMobile ? 0.6 : 0.45}
+          rotateSpeed={isMobile ? 0.55 : 0.45}
           autoRotate={false}
           minPolarAngle={Math.PI * 0.28}
           maxPolarAngle={Math.PI * 0.68}
@@ -733,9 +733,9 @@ export default function MeteorField3D({
         />
       </Canvas>
 
-      <div className="pointer-events-none absolute bottom-3 sm:bottom-4 left-1/2 z-10 flex -translate-x-1/2 items-center gap-2 rounded-full border border-white/10 bg-slate-950/75 px-3.5 sm:px-4 py-1.5 text-[0.55rem] sm:text-[0.62rem] uppercase tracking-[0.25em] sm:tracking-[0.3em] text-slate-200 backdrop-blur-md shadow-lg whitespace-nowrap">
+      <div className="pointer-events-none absolute bottom-2 sm:bottom-4 left-1/2 z-10 flex -translate-x-1/2 items-center gap-2 rounded-full border border-white/10 bg-slate-950/75 px-3 sm:px-4 py-1 sm:py-1.5 text-[0.52rem] sm:text-[0.62rem] uppercase tracking-[0.22em] sm:tracking-[0.3em] text-slate-200 backdrop-blur-md shadow-lg whitespace-nowrap">
         <span className="inline-block h-1.5 w-1.5 animate-ping rounded-full bg-cyan-400" />
-        {isMobile ? "Swipe to Rotate · Tap a Planet" : "Drag to Orbit · Click a Planet"}
+        {isMobile ? "Swipe to Rotate · Tap Planet" : "Drag to Orbit · Click a Planet"}
       </div>
     </div>
   );
