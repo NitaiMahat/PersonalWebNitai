@@ -15,11 +15,11 @@ export default function Home() {
   const [introDone, setIntroDone] = useState(false);
 
   return (
-    <main className="relative">
+    <main id="main-content" className="relative">
       <CustomCursor />
       <Intro onDone={() => setIntroDone(true)} />
 
-      <section className="relative min-h-screen">
+      <section className="relative min-h-dvh">
         <GalaxyBackground />
         <Hero start={introDone} />
         {/* sparse particles floating in front of the figure for depth */}

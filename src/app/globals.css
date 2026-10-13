@@ -8,6 +8,8 @@
   --accent: #1f6b3b; /* green from the sneakers */
   --accent-soft: #2f9457;
   --maroon: #6e1f2a; /* maroon from the gazebo pillars */
+  --font-display: "Trebuchet MS", "Segoe UI", sans-serif;
+  --font-body: Aptos, "Segoe UI", system-ui, sans-serif;
 }
 
 @theme inline {
@@ -18,8 +20,8 @@
   --color-accent: var(--accent);
   --color-accent-soft: var(--accent-soft);
   --color-maroon: var(--maroon);
-  --font-display: var(--font-display);
-  --font-body: var(--font-body);
+  --font-display: "Trebuchet MS", "Segoe UI", sans-serif;
+  --font-body: Aptos, "Segoe UI", system-ui, sans-serif;
 }
 
 html {
@@ -31,6 +33,34 @@ body {
   color: var(--foreground);
   font-family: var(--font-body), system-ui, sans-serif;
   overflow-x: hidden;
+}
+
+::selection {
+  background: color-mix(in srgb, var(--accent-soft) 55%, transparent);
+  color: white;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent-soft);
+  outline-offset: 4px;
+}
+
+.skip-link {
+  position: fixed;
+  left: 1rem;
+  top: 1rem;
+  z-index: 100;
+  transform: translateY(-180%);
+  border-radius: 0.5rem;
+  background: var(--foreground);
+  color: var(--background);
+  padding: 0.65rem 0.9rem;
+  font-weight: 600;
+  transition: transform 180ms ease;
+}
+
+.skip-link:focus {
+  transform: translateY(0);
 }
 
 /* Gradient text helper used by the hero title */
@@ -306,6 +336,14 @@ body {
 
 /* ── Reduced motion ─────────────────────────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
   html {
     scroll-behavior: auto;
   }
@@ -349,18 +387,4 @@ body {
 }
 #projects ::-webkit-scrollbar-thumb:hover {
   background: rgba(255, 255, 255, 0.2);
-}
-
-/* Hide scrollbar for clean horizontal filtering on mobile */
-.scrollbar-none::-webkit-scrollbar {
-  display: none;
-}
-.scrollbar-none {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
-}
-
-/* Optimize touch interactions */
-* {
-  -webkit-tap-highlight-color: transparent;
 }

@@ -1,33 +1,29 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo } from "react";
 
-function seededRand(seed: number) {
-  const x = Math.sin(seed * 9301 + 49297) * 49297;
-  return x - Math.floor(x);
+function seededRandom(seed: number) {
+  const value = Math.sin(seed * 9301 + 49297) * 49297;
+  return value - Math.floor(value);
 }
 
-/** White particles drifting across a dark backdrop. Shared by About & Experience. */
+/** White particles drifting across a dark backdrop. Client-only (uses
+ *  Math.random) to avoid hydration mismatch. Shared by About & Experience. */
 export default function SpaceParticles({ count = 60 }: { count?: number }) {
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
-
   const dots = useMemo(
     () =>
       Array.from({ length: count }).map((_, i) => ({
-        left: seededRand(i * 13 + 1) * 100,
-        top: seededRand(i * 17 + 2) * 100,
-        size: 1 + seededRand(i * 19 + 3) * 2.5,
-        op: 0.4 + seededRand(i * 23 + 4) * 0.6,
-        dx: `${(seededRand(i * 29 + 5) * 2 - 1) * 70}px`,
-        dy: `${(seededRand(i * 31 + 6) * 2 - 1) * 70}px`,
-        dur: 10 + seededRand(i * 37 + 7) * 14,
-        delay: seededRand(i * 41 + 8) * 8,
+        left: seededRandom(i * 11 + 1) * 100,
+        top: seededRandom(i * 13 + 2) * 100,
+        size: 1 + seededRandom(i * 17 + 3) * 2.5,
+        op: 0.4 + seededRandom(i * 19 + 4) * 0.6,
+        dx: `${(seededRandom(i * 23 + 5) * 2 - 1) * 70}px`,
+        dy: `${(seededRandom(i * 29 + 6) * 2 - 1) * 70}px`,
+        dur: 10 + seededRandom(i * 31 + 7) * 14,
+        delay: seededRandom(i * 37 + 8) * 8,
       })),
     [count]
   );
-
-  if (!mounted) return null;
 
   return (
     <div className="pointer-events-none absolute inset-0 z-0">

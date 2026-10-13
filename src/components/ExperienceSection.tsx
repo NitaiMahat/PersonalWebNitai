@@ -1,6 +1,6 @@
 "use client";
 
-import { AnimatePresence, motion, useInView } from "motion/react";
+import { AnimatePresence, motion, useInView, useReducedMotion } from "motion/react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import SpaceParticles from "@/components/SpaceParticles";
 
@@ -32,8 +32,8 @@ const exps: Exp[] = [
     period: "Aug 2023 – Nov 2023",
     icon: I(<><rect x="3" y="4" width="18" height="13" rx="2" /><path d="M3 17h18M9 21h6" /><path d="M7 12l3-3 2 2 3-4" /></>),
     bullets: [
-      "Built a custom expense tracker in Python (Tkinter + SQL) with to-do lists, printable reports, and visualization dashboards.",
-      "Cut monthly expenses 10% by surfacing hidden costs in operations and utilities.",
+      "Built a custom expense tracker in Python with Tkinter and SQL, including to-do lists, printable reports, and visualization dashboards.",
+      "Reduced monthly expenses by 10% by surfacing hidden operational and utility costs.",
     ],
   },
   {
@@ -44,20 +44,20 @@ const exps: Exp[] = [
     period: "Apr 2024 – Aug 2024",
     icon: I(<><rect x="3" y="4" width="18" height="16" rx="2" /><path d="M3 9h18M8 14h6" /></>),
     bullets: [
-      "Refactored a legacy React frontend and optimized Node.js APIs, increasing user retention by 25%.",
-      "Reduced average API response time by 30% with response caching and batched database queries.",
+      "Refactored legacy React components into reusable modules and implemented new client-facing features.",
+      "Optimized Node.js REST APIs by eliminating redundant database queries, reducing API response time by 30%.",
     ],
   },
   {
     x: 36, y: 64, color: "#ff6a2b",
     role: "Software Development Intern",
     org: "Attention.ad",
-    location: "Dover, USA",
+    location: "Dover, DE",
     period: "Jun 2025 – Aug 2025",
     icon: I(<><path d="M8 9l-3 3 3 3" /><path d="M16 9l3 3-3 3" /><path d="M13 6l-2 12" /></>),
     bullets: [
-      "Built full-stack React/Node.js features backed by PostgreSQL, increasing user engagement by 25% while supporting 500+ daily transactions at 99.9% uptime.",
-      "Reduced failed transaction confirmations by 40% using idempotent transaction flows with exponential backoff retries for reliable payment processing under network latency.",
+      "Developed React and Node.js features for wallet integration, coin creation, and automated royalty distribution backed by PostgreSQL.",
+      "Implemented idempotent transaction validation and exponential-backoff retries to handle transient confirmation failures and reduce duplicate-processing risk.",
     ],
   },
   {
@@ -69,43 +69,43 @@ const exps: Exp[] = [
     icon: I(<><path d="M22 2L11 13" /><path d="M22 2l-7 20-4-9-9-4 20-7z" /></>),
     bullets: [
       "Collaborated with United Airlines to design a web solution promoting aviation careers for middle school students.",
-      "Coordinated a multidisciplinary team, keeping research, design, and feedback connected and organized.",
+      "Coordinated a multidisciplinary team across research, design, and stakeholder feedback.",
     ],
   },
   {
     x: 63, y: 64, color: "#ec4899",
-    role: "Career Prep Fellow (Top 2.3% Selected)",
+    role: "Career Prep Fellow (Top 4% Selected)",
     org: "Uber",
-    location: "Remote · Part-time",
+    location: "Remote",
     period: "Jan 2026 – Jun 2026",
     icon: I(<><circle cx="12" cy="12" r="9" /><circle cx="12" cy="12" r="5" /><circle cx="12" cy="12" r="1.5" /></>),
     bullets: [
-      "Selected for Uber's engineering development program, completing 40+ hours of technical interview preparation, mentorship, and coaching with Uber software engineers.",
-      "Completed regular mock interviews on data structures and algorithms with practicing engineers.",
+      "Selected for the Uber Career Prep Fellowship as part of the top 4% of applicants.",
     ],
   },
   {
     x: 76.5, y: 38, color: "#9d4edd",
-    role: "Research Assistant · AI for Agent-Based Model Analysis",
+    role: "Student Researcher · AI for Agent-Based Model Analysis",
     org: "Augustana College",
-    location: "Rock Island, IL · Prof. Forrest Stonedahl",
+    location: "Rock Island, IL",
     period: "Feb 2026 – May 2026",
     icon: I(<><path d="M22 9L12 4 2 9l10 5 10-5z" /><path d="M6 11v5c0 1 3 3 6 3s6-2 6-3v-5" /></>),
     bullets: [
-      "Developed multimodal LLM pipelines with Gemini to classify emergent behaviors in NetLogo simulation videos, automating large-scale analysis through few-shot prompting and Python workflows.",
-      "Co-authored a 2026 NetLogo Conference paper showing lightweight frame-based prompting reached 84.6% accuracy, outperforming full-video classification (66.7%) while reducing API cost and token usage.",
+      "Built a Python and Gemini few-shot classification pipeline to identify emergent behaviors in NetLogo simulation videos using frame-based and full-video inputs.",
+      "Co-authored a paper for the 2026 NetLogo Conference comparing frame-based and full-video classification and evaluating prediction accuracy.",
     ],
   },
   {
     x: 90, y: 64, color: "#f59e0b",
-    role: "Undergraduate Research Assistant · AI for Hyperacusis Therapy",
+    role: "Student Researcher / Software Developer · Audalis",
     org: "Augustana College",
-    location: "Rock Island, IL · Dr. Ann Perreau",
-    period: "Starting Fall 2026",
+    location: "Rock Island, IL",
+    period: "Sep 2026 – Present",
     icon: I(<><path d="M12 3v18" /><path d="M8 7v10" /><path d="M4 10v4" /><path d="M16 7v10" /><path d="M20 10v4" /></>),
     bullets: [
-      "Developing Audalis, a Flutter-based application supporting AI-assisted hyperacusis therapy, testing, and clinical research.",
-      "Collaborating with faculty to bring applied AI into hearing-therapy workflows for patients and clinicians.",
+      "Extended Audalis, a Flutter and Firebase platform for hyperacusis assessments and sound therapy across Android tablets and web, supporting a research pilot involving 45+ participants.",
+      "Implemented encrypted offline assessment queues, reconnect retries, and atomic Firestore writes for connectivity interruptions.",
+      "Built researcher workflows with role-based access controls and validated them with 43 automated regression and security checks.",
     ],
   },
 ];
@@ -140,6 +140,7 @@ export default function ExperienceSection() {
   const [hovered, setHovered] = useState<number | null>(null);
   const [playing, setPlaying] = useState(false);
   const played = useRef(false);
+  const reduce = useReducedMotion();
 
   useEffect(() => {
     const el = stageRef.current;
@@ -167,7 +168,7 @@ export default function ExperienceSection() {
       cum[i] = cum[i - 1] + Math.abs(pts[i].x - pts[i - 1].x) + Math.abs(pts[i].y - pts[i - 1].y);
     }
     const total = cum[cum.length - 1] || 1;
-    const D = 7000;
+    const D = reduce ? 0 : 3200;
     const timers = exps.map((_, i) =>
       setTimeout(() => {
         setLit((v) => Math.max(v, i + 1));
@@ -180,7 +181,7 @@ export default function ExperienceSection() {
       timers.forEach(clearTimeout);
       clearTimeout(clear);
     };
-  }, [inView, size, pts]);
+  }, [inView, size, pts, reduce]);
 
   const displayActive = hovered ?? active;
   const isLit = (i: number) => i < lit || i === hovered;
@@ -189,20 +190,51 @@ export default function ExperienceSection() {
     <section
       ref={sectionRef}
       id="experience"
-      className="relative flex min-h-screen w-full flex-col items-center justify-center overflow-hidden bg-[#04040a] px-6 py-24"
+      className="relative flex min-h-dvh w-full flex-col items-center justify-center overflow-hidden bg-[#04040a] px-4 py-20 sm:px-6 sm:py-24"
     >
-      {inView && <SpaceParticles />}
+      {inView && <SpaceParticles count={36} />}
       <div className="pointer-events-none absolute left-1/2 top-1/2 h-[70vmin] w-[70vmin] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(circle,rgba(157,78,221,0.16),transparent_70%)] blur-2xl" />
 
       <h2 className="relative z-10 mb-2 font-display text-sm uppercase tracking-[0.3em] text-accent-soft">
         Experience
       </h2>
       <p className="relative z-10 mb-10 max-w-md text-center text-sm text-muted">
-        Follow the line — each stop lights up the story.
+        A résumé-aligned timeline of the work, research, and fellowship experience behind my projects.
       </p>
 
-      {/* Desktop Horizontal Circuit View (lg+) */}
-      <div ref={stageRef} className="relative z-10 hidden w-full max-w-6xl lg:block" style={{ aspectRatio: "16 / 8" }}>
+      <div className="relative z-10 grid w-full max-w-xl gap-4 md:hidden">
+        {exps.map((e, i) => (
+          <motion.article
+            key={`${e.org}-${e.period}`}
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-8%" }}
+            transition={{ duration: reduce ? 0 : 0.45, delay: reduce ? 0 : i * 0.05 }}
+            className="rounded-2xl border border-white/10 bg-white/[0.055] p-5 backdrop-blur-sm"
+          >
+            <div className="flex items-start gap-4">
+              <div className="grid h-11 w-11 shrink-0 place-items-center rounded-xl border bg-black/20" style={{ borderColor: `${e.color}66`, color: e.color }}>
+                {e.icon}
+              </div>
+              <div className="min-w-0">
+                <p className="text-[0.65rem] font-semibold uppercase tracking-[0.18em]" style={{ color: e.color }}>{e.period}</p>
+                <h3 className="mt-1 font-display text-base font-bold text-white">{e.role}</h3>
+                <p className="text-sm text-white/80">{e.org} · {e.location}</p>
+              </div>
+            </div>
+            <ul className="mt-4 space-y-2">
+              {e.bullets.map((bullet) => (
+                <li key={bullet} className="flex gap-2 text-sm leading-6 text-muted">
+                  <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: e.color }} />
+                  <span>{bullet}</span>
+                </li>
+              ))}
+            </ul>
+          </motion.article>
+        ))}
+      </div>
+
+      <div ref={stageRef} className="relative z-10 hidden w-full max-w-6xl md:block" style={{ aspectRatio: "16 / 8" }}>
         {size.w > 0 && (
           <svg className="pointer-events-none absolute inset-0 h-full w-full overflow-visible" viewBox={`0 0 ${size.w} ${size.h}`}>
             <defs>
@@ -253,7 +285,7 @@ export default function ExperienceSection() {
                 onFocus={() => setHovered(i)}
                 onBlur={() => setHovered(null)}
                 className="pointer-events-auto relative block cursor-pointer"
-                animate={{ y: [0, -8, 0] }}
+                animate={reduce ? undefined : { y: [0, -8, 0] }}
                 transition={{ duration: 4 + i * 0.4, repeat: Infinity, ease: "easeInOut", delay: i * 0.3 }}
                 aria-label={`${e.role} at ${e.org}`}
               >
@@ -325,83 +357,7 @@ export default function ExperienceSection() {
         </AnimatePresence>
       </div>
 
-      {/* Mobile & Tablet Vertical Timeline View (< lg) */}
-      <div className="relative z-10 block w-full max-w-xl lg:hidden">
-        {/* Glowing vertical conduit line */}
-        <div className="absolute bottom-6 left-6 top-6 w-0.5 -translate-x-1/2 bg-gradient-to-b from-[#2dd4bf] via-[#38bdf8] via-[#ec4899] to-[#f59e0b] opacity-40 shadow-[0_0_12px_rgba(56,189,248,0.5)]" />
-
-        <div className="space-y-8">
-          {exps.map((e, i) => (
-            <motion.div
-              key={i}
-              initial={{ opacity: 0, x: 20 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true, margin: "-10%" }}
-              transition={{ duration: 0.5, delay: i * 0.08 }}
-              className="relative flex items-start gap-4 sm:gap-6 pl-2"
-            >
-              {/* Timeline milestone node icon */}
-              <div
-                className="relative z-10 grid h-12 w-12 shrink-0 place-items-center rounded-2xl border bg-slate-950/90 shadow-lg"
-                style={{
-                  borderColor: `${e.color}88`,
-                  color: e.color,
-                  boxShadow: `0 0 20px ${e.color}44`,
-                }}
-              >
-                <div className="scale-75">{e.icon}</div>
-                <span
-                  className="absolute -right-0.5 -top-0.5 h-2 w-2 rounded-full"
-                  style={{ background: e.color, boxShadow: `0 0 8px ${e.color}` }}
-                />
-              </div>
-
-              {/* Card content */}
-              <div
-                className="flex-1 rounded-2xl border bg-white/[0.04] p-4 sm:p-5 shadow-xl backdrop-blur-xl transition-all duration-300"
-                style={{ borderColor: `${e.color}33` }}
-              >
-                <div className="flex flex-wrap items-center justify-between gap-1">
-                  <span
-                    className="font-display text-[0.62rem] sm:text-[0.68rem] font-bold uppercase tracking-[0.2em]"
-                    style={{ color: e.color }}
-                  >
-                    {e.period}
-                  </span>
-                  <span
-                    className="rounded-full px-2 py-0.5 text-[0.58rem] sm:text-[0.62rem] font-medium tracking-wider text-slate-300 border border-white/10 bg-white/5"
-                  >
-                    {e.org}
-                  </span>
-                </div>
-
-                <h3 className="mt-1.5 font-display text-sm sm:text-base font-bold text-white leading-snug">
-                  {e.role}
-                </h3>
-                <p className="mt-0.5 text-[0.7rem] sm:text-xs text-slate-400">
-                  {e.location}
-                </p>
-
-                <div className="my-2.5 h-px w-full bg-white/10" />
-
-                <ul className="space-y-1.5 sm:space-y-2">
-                  {e.bullets.map((b, bi) => (
-                    <li key={bi} className="flex gap-2 text-xs sm:text-[0.8rem] leading-relaxed text-slate-300">
-                      <span
-                        className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full"
-                        style={{ background: e.color }}
-                      />
-                      <span>{b}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </motion.div>
-          ))}
-        </div>
-      </div>
-
-      <p className="relative z-10 mt-10 text-[0.7rem] uppercase tracking-[0.2em] text-muted/50 hidden lg:block">
+      <p className="relative z-10 mt-10 hidden text-[0.7rem] uppercase tracking-[0.2em] text-muted/50 md:block">
         hover a tile to revisit its story
       </p>
     </section>

@@ -45,9 +45,9 @@ const fragmentShader = /* glsl */ `
   }
 `;
 
-function seededRandGalaxy(seed: number) {
-  const x = Math.sin(seed * 9301 + 49297) * 49297;
-  return x - Math.floor(x);
+function seededRandom(seed: number) {
+  const value = Math.sin(seed * 9301 + 49297) * 49297;
+  return value - Math.floor(value);
 }
 
 function ParticleGalaxy() {
@@ -55,7 +55,7 @@ function ParticleGalaxy() {
   const reduce = useReducedMotion();
 
   const geometry = useMemo(() => {
-    const COUNT = 16000;
+    const COUNT = 7000;
     const RADIUS = 8;
     const BRANCHES = 4;
     const SPIN = 0.9;
@@ -70,26 +70,27 @@ function ParticleGalaxy() {
 
     for (let i = 0; i < COUNT; i++) {
       const i3 = i * 3;
-      const r = seededRandGalaxy(i * 5 + 1) * RADIUS;
+      const random = (offset: number) => seededRandom(i * 17 + offset);
+      const r = random(1) * RADIUS;
       const branchAngle = ((i % BRANCHES) / BRANCHES) * Math.PI * 2;
       const baseAngle = branchAngle + r * SPIN;
-      const scatter = (mul = 1, seedOffset = 0) =>
-        Math.pow(seededRandGalaxy(i * 13 + seedOffset + 2), POWER) *
-        (seededRandGalaxy(i * 17 + seedOffset + 3) < 0.5 ? 1 : -1) *
+      const scatter = (offset: number, mul = 1) =>
+        Math.pow(random(offset), POWER) *
+        (random(offset + 1) < 0.5 ? 1 : -1) *
         RANDOMNESS *
         r *
         mul;
 
-      positions[i3] = Math.cos(baseAngle) * r + scatter(1, 0);
-      positions[i3 + 1] = scatter(0.5, 100); // keep the disc fairly flat
-      positions[i3 + 2] = Math.sin(baseAngle) * r + scatter(1, 200);
+      positions[i3] = Math.cos(baseAngle) * r + scatter(2);
+      positions[i3 + 1] = scatter(4, 0.5); // keep the disc fairly flat
+      positions[i3 + 2] = Math.sin(baseAngle) * r + scatter(6);
 
       const col = inside.clone().lerp(outside, r / RADIUS);
       colors[i3] = col.r;
       colors[i3 + 1] = col.g;
       colors[i3 + 2] = col.b;
 
-      scales[i] = seededRandGalaxy(i * 23 + 4);
+      scales[i] = random(8);
     }
 
     const g = new THREE.BufferGeometry();
@@ -144,16 +145,17 @@ export default function GalaxyBackground() {
   }, []);
 
   return (
-    <div ref={wrapRef} className="absolute inset-0 z-0 cursor-grab active:cursor-grabbing touch-pan-y pointer-events-none sm:pointer-events-auto">
+    <div ref={wrapRef} className="absolute inset-0 z-0 cursor-grab active:cursor-grabbing">
       {/* Zoomed-in, oblique view. OrbitControls = drag to orbit, scroll to zoom. */}
       <Canvas
         camera={{ position: [0, 3, 6], fov: 60 }}
-        dpr={[1, 1.75]}
+        dpr={[1, 1.25]}
+        gl={{ antialias: false, powerPreference: "high-performance" }}
         frameloop={onScreen ? "always" : "never"}
       >
         <color attach="background" args={["#05050a"]} />
         <ParticleGalaxy />
-        <Stars radius={140} depth={70} count={2000} factor={4} fade speed={0.5} />
+        <Stars radius={140} depth={70} count={900} factor={4} fade speed={reduce ? 0 : 0.35} />
 
         <OrbitControls
           makeDefault
@@ -173,7 +175,7 @@ export default function GalaxyBackground() {
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_75%_65%_at_50%_50%,transparent_45%,var(--background)_100%)]" />
 
       {/* Discoverability hint */}
-      <div className="pointer-events-none absolute bottom-4 sm:bottom-6 left-4 sm:left-6 z-10 hidden sm:flex items-center gap-2 text-[0.65rem] sm:text-[0.7rem] uppercase tracking-[0.2em] text-muted/70">
+      <div className="pointer-events-none absolute bottom-6 left-6 z-10 flex items-center gap-2 text-[0.7rem] uppercase tracking-[0.2em] text-muted/70">
         <span className="inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-accent-soft" />
         Drag to orbit
       </div>

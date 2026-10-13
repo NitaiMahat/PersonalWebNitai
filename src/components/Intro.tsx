@@ -10,7 +10,7 @@ export default function Intro({ onDone }: { onDone: () => void }) {
   const reduce = useReducedMotion();
 
   useEffect(() => {
-    const t = setTimeout(() => setShow(false), reduce ? 200 : 2300);
+    const t = setTimeout(() => setShow(false), reduce ? 100 : 1350);
     return () => clearTimeout(t);
   }, [reduce]);
 
@@ -32,7 +32,7 @@ export default function Intro({ onDone }: { onDone: () => void }) {
                 animate={{ opacity: 1, y: 0, rotate: 0 }}
                 transition={{
                   delay: reduce ? 0 : 0.1 + i * 0.06,
-                  duration: 0.7,
+                  duration: 0.5,
                   ease: [0.22, 1, 0.36, 1],
                 }}
               >
@@ -48,7 +48,7 @@ export default function Intro({ onDone }: { onDone: () => void }) {
               animate={{ width: "100%" }}
               transition={{
                 delay: 0.4,
-                duration: reduce ? 0.2 : 1.6,
+                duration: reduce ? 0.1 : 0.85,
                 ease: [0.65, 0, 0.35, 1],
               }}
             />

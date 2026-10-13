@@ -21,7 +21,7 @@ export default function CustomCursor() {
 
   useEffect(() => {
     if (!window.matchMedia("(pointer: fine)").matches) return;
-    setEnabled(true);
+    const frame = window.requestAnimationFrame(() => setEnabled(true));
     document.documentElement.classList.add("custom-cursor");
 
     const onMove = (e: MouseEvent) => {
@@ -36,6 +36,7 @@ export default function CustomCursor() {
     window.addEventListener("mousemove", onMove);
     return () => {
       window.removeEventListener("mousemove", onMove);
+      window.cancelAnimationFrame(frame);
       document.documentElement.classList.remove("custom-cursor");
     };
   }, [x, y]);
@@ -46,7 +47,7 @@ export default function CustomCursor() {
     <>
       {/* exact inner dot */}
       <motion.div
-        className="pointer-events-none fixed left-0 top-0 z-[9999]"
+        className="pointer-events-none fixed left-0 top-0 z-[60]"
         style={{ x, y }}
       >
         <div className="h-1.5 w-1.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white mix-blend-difference" />
@@ -54,7 +55,7 @@ export default function CustomCursor() {
 
       {/* lagging ring */}
       <motion.div
-        className="pointer-events-none fixed left-0 top-0 z-[9999]"
+        className="pointer-events-none fixed left-0 top-0 z-[60]"
         style={{ x: rx, y: ry }}
       >
         <motion.div

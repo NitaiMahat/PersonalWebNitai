@@ -25,9 +25,6 @@ function seededRand(seed: number) {
 
 /* ── Deep Space Stars ────────────────────────────────────────────────── */
 function DeepSpaceStars() {
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
-
   const stars = useMemo(
     () =>
       Array.from({ length: 180 }).map((_, i) => ({
@@ -40,8 +37,6 @@ function DeepSpaceStars() {
       })),
     []
   );
-
-  if (!mounted) return null;
 
   return (
     <div className="pointer-events-none absolute inset-0 overflow-hidden">
@@ -98,17 +93,11 @@ export default function ProjectsSection() {
     return () => window.removeEventListener("keydown", handleKey);
   }, []);
 
-  useEffect(() => {
-    if (activeSlug && !visibleProjects.some((p) => p.slug === activeSlug)) {
-      setActiveSlug(null);
-    }
-  }, [activeSlug, visibleProjects]);
-
   return (
     <section
       id="projects"
       className="relative overflow-hidden bg-[#04040a]"
-      style={{ minHeight: "100vh" }}
+      style={{ minHeight: "100dvh" }}
     >
       {/* Background Starfield & Colored Nebulae */}
       <DeepSpaceStars />
@@ -145,7 +134,10 @@ export default function ProjectsSection() {
                 <button
                   key={filter}
                   type="button"
-                  onClick={() => setActiveFilter(filter)}
+                  onClick={() => {
+                    setActiveFilter(filter);
+                    setActiveSlug(null);
+                  }}
                   className={`shrink-0 rounded-full px-3.5 sm:px-4 py-1 sm:py-1.5 text-[0.58rem] sm:text-[0.62rem] font-bold uppercase tracking-[0.2em] transition-all duration-300 ${
                     active
                       ? "border border-cyan-400/40 bg-cyan-500/15 text-cyan-200 shadow-[0_0_20px_rgba(6,182,212,0.25)]"
@@ -171,7 +163,7 @@ export default function ProjectsSection() {
       <AnimatePresence>
         {activeProject && (
           <motion.div
-            className="fixed inset-0 z-[120] flex items-center justify-center p-3 sm:p-4 md:p-6"
+            className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 md:p-6"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -192,6 +184,9 @@ export default function ProjectsSection() {
               exit={{ opacity: 0, y: 20, scale: 0.96 }}
               transition={{ duration: 0.38, ease: [0.22, 1, 0.36, 1] }}
               onClick={(e) => e.stopPropagation()}
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="project-dialog-title"
               className="relative w-[95vw] sm:w-full max-w-2xl max-h-[88vh] overflow-y-auto rounded-[24px] sm:rounded-[28px] border border-cyan-500/30 bg-slate-950/95 p-5 sm:p-6 md:p-8 shadow-[0_0_80px_rgba(6,182,212,0.25)] backdrop-blur-2xl"
             >
               {/* Top Accent Line */}
@@ -212,7 +207,7 @@ export default function ProjectsSection() {
                     >
                       {activeProject.status}
                     </span>
-                    <h3 className="mt-1 font-display text-xl sm:text-2xl md:text-3xl font-bold text-white">
+                    <h3 id="project-dialog-title" className="mt-1 font-display text-xl sm:text-2xl md:text-3xl font-bold text-white">
                       {activeProject.name}
                     </h3>
                     <p className="mt-1.5 sm:mt-2 text-xs sm:text-sm leading-relaxed text-slate-300">
@@ -222,6 +217,7 @@ export default function ProjectsSection() {
                   <button
                     type="button"
                     onClick={() => setActiveSlug(null)}
+                    aria-label="Close project details"
                     className="shrink-0 rounded-full border border-white/10 bg-white/5 p-2 text-slate-400 hover:border-white/30 hover:text-white"
                   >
                     <svg className="h-4 sm:h-5 w-4 sm:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
@@ -264,6 +260,22 @@ export default function ProjectsSection() {
                     ))}
                   </div>
                 </div>
+
+                {activeProject.links && (
+                  <div className="mt-5 flex flex-wrap gap-3">
+                    {activeProject.links.map((link) => (
+                      <a
+                        key={link.href}
+                        href={link.href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="rounded-full border border-cyan-400/35 bg-cyan-500/10 px-5 py-2 text-xs font-semibold uppercase tracking-wider text-cyan-200 transition hover:border-cyan-300 hover:bg-cyan-500/20 active:scale-[0.98]"
+                      >
+                        {link.label} ↗
+                      </a>
+                    ))}
+                  </div>
+                )}
 
                 {/* Close Button */}
                 <div className="mt-5 sm:mt-6 flex justify-end">

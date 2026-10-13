@@ -5,6 +5,7 @@ import { useRef, useState } from "react";
 import SpaceParticles from "@/components/SpaceParticles";
 
 const EMAIL = "mahatnitai@gmail.com";
+const PHONE = "203-887-9850";
 const LINKEDIN = "https://www.linkedin.com/in/nitai-mahat-47079b347/";
 const GITHUB = "https://github.com/NitaiMahat";
 
@@ -18,6 +19,17 @@ type Channel = {
 };
 
 const channels: Channel[] = [
+  {
+    label: "Phone",
+    value: PHONE,
+    href: `tel:${PHONE.replaceAll("-", "")}`,
+    color: "#2f9457",
+    icon: (
+      <svg viewBox="0 0 24 24" className="h-7 w-7" fill="none" stroke="currentColor" strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round">
+        <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.8 19.8 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.12 4.18 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.12.9.33 1.78.62 2.63a2 2 0 0 1-.45 2.11L8 9.73a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.85.29 1.73.5 2.63.62A2 2 0 0 1 22 16.92z" />
+      </svg>
+    ),
+  },
   {
     label: "Email",
     value: EMAIL,
@@ -64,7 +76,7 @@ function ChannelCard({ channel, index }: { channel: Channel; index: number }) {
       target={channel.external ? "_blank" : undefined}
       rel={channel.external ? "noopener noreferrer" : undefined}
       data-cursor="view"
-      className="group pointer-events-auto relative flex w-full items-center gap-4 overflow-hidden rounded-2xl border border-white/[0.08] bg-white/[0.03] px-5 py-4 backdrop-blur-md transition-colors duration-300 hover:border-white/20 sm:w-64 sm:flex-col sm:items-start sm:gap-5 sm:px-6 sm:py-7"
+      className="group pointer-events-auto relative flex w-full items-center gap-4 overflow-hidden rounded-2xl border border-white/[0.08] bg-white/[0.03] px-5 py-4 backdrop-blur-md transition-colors duration-300 hover:border-white/20 sm:flex-col sm:items-start sm:gap-5 sm:px-6 sm:py-7"
       initial={{ opacity: 0, y: 28 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-10%" }}
@@ -119,9 +131,9 @@ export default function ContactSection() {
     <section
       ref={sectionRef}
       id="contact"
-      className="relative flex min-h-screen w-full flex-col items-center justify-center overflow-hidden bg-[#050510] px-4 sm:px-6 py-20 sm:py-24"
+      className="relative flex min-h-dvh w-full flex-col items-center justify-center overflow-hidden bg-[#050510] px-4 py-20 sm:px-6 sm:py-24"
     >
-      {inView && <SpaceParticles count={50} />}
+      {inView && <SpaceParticles count={32} />}
 
       {/* ambient glows */}
       <div className="pointer-events-none absolute left-1/2 top-1/3 h-[60vmin] w-[60vmin] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(circle,rgba(47,148,87,0.14),transparent_70%)] blur-3xl" />
@@ -129,7 +141,7 @@ export default function ContactSection() {
 
       <div className="relative z-10 flex w-full max-w-3xl flex-col items-center text-center">
         <motion.p
-          className="font-display text-[0.65rem] sm:text-[0.7rem] uppercase tracking-[0.35em] sm:tracking-[0.4em] text-accent-soft/70"
+          className="font-display text-[0.7rem] uppercase tracking-[0.4em] text-accent-soft/70"
           initial={{ opacity: 0, y: 16 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
@@ -139,7 +151,7 @@ export default function ContactSection() {
         </motion.p>
 
         <motion.h2
-          className="mt-3 sm:mt-4 font-display text-2xl sm:text-3xl md:text-5xl font-bold text-white"
+          className="mt-4 font-display text-3xl font-bold text-white md:text-5xl"
           style={{ textShadow: "0 4px 30px rgba(0,0,0,0.6)" }}
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -150,7 +162,7 @@ export default function ContactSection() {
         </motion.h2>
 
         <motion.p
-          className="mt-3 sm:mt-4 max-w-md text-xs sm:text-sm leading-relaxed text-muted px-2"
+          className="mt-4 max-w-md text-sm leading-relaxed text-muted"
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
@@ -161,7 +173,7 @@ export default function ContactSection() {
         </motion.p>
 
         {/* channels */}
-        <div className="mt-8 sm:mt-12 flex w-full flex-col items-stretch justify-center gap-3 sm:gap-4 sm:flex-row sm:items-stretch">
+        <div className="mt-10 grid w-full grid-cols-1 gap-4 sm:mt-12 sm:grid-cols-2">
           {channels.map((c, i) => (
             <ChannelCard key={c.label} channel={c} index={i} />
           ))}
@@ -172,7 +184,7 @@ export default function ContactSection() {
           type="button"
           onClick={copyEmail}
           data-cursor="view"
-          className="pointer-events-auto mt-8 sm:mt-10 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/[0.04] px-4 sm:px-5 py-2 sm:py-2.5 text-[0.68rem] sm:text-[0.72rem] uppercase tracking-[0.2em] text-white/70 backdrop-blur-md transition-colors hover:border-accent-soft/60 hover:text-white"
+          className="pointer-events-auto mt-10 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/[0.04] px-5 py-2.5 text-[0.72rem] uppercase tracking-[0.2em] text-white/70 backdrop-blur-md transition-colors hover:border-accent-soft/60 hover:text-white"
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
           viewport={{ once: true }}
@@ -185,7 +197,7 @@ export default function ContactSection() {
           {copied ? "Copied to clipboard" : "Copy email address"}
         </motion.button>
 
-        <p className="mt-12 sm:mt-14 text-[0.65rem] uppercase tracking-[0.2em] text-white/25">
+        <p className="mt-14 text-[0.65rem] uppercase tracking-[0.2em] text-white/25">
           © 2026 Nitai Mahat
         </p>
       </div>

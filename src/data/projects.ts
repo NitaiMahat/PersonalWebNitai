@@ -8,9 +8,44 @@ export type Project = {
   tech: string[];
   tags: string[];
   highlights: string[];
+  links?: { label: string; href: string }[];
 };
 
 export const projects: Project[] = [
+  {
+    slug: "atlas-jobs",
+    name: "Atlas Jobs",
+    tagline: "Distributed job processing system",
+    status: "Featured",
+    accent: "#7c83ff",
+    summary:
+      "Engineered a horizontally scalable worker system focused on reliability, throughput, and safe recovery after crashes.",
+    tech: ["Java", "Spring Boot", "PostgreSQL", "Docker", "k6"],
+    tags: ["Featured", "Backend", "Java"],
+    highlights: [
+      "Used FOR UPDATE SKIP LOCKED to coordinate concurrent Spring Boot workers and prevent simultaneous claims of pending jobs.",
+      "Implemented stale-job recovery and idempotency-key deduplication for safe worker restarts.",
+      "Measured 145+ HTTP requests per second in k6 load tests.",
+    ],
+    links: [{ label: "GitHub", href: "https://github.com/NitaiMahat/atlas-jobs" }],
+  },
+  {
+    slug: "paila",
+    name: "PAILA",
+    tagline: "Outdoor navigation platform",
+    status: "Live",
+    accent: "#36d6c3",
+    summary:
+      "Built an outdoor navigation platform for discovering routes, reviewing elevation details, and creating device-first drafts.",
+    tech: ["React", "TypeScript", "MapLibre", "Capacitor", "Supabase"],
+    tags: ["Featured", "Full Stack"],
+    highlights: [
+      "Launched the PAILA waitlist website and attracted 500+ signups within its first week.",
+      "Integrated three hiking, running, and cycling route sources into a searchable map with elevation and source-specific details.",
+      "Built pedestrian-network route creation, GPX validation, and device-first drafts with Supabase sync; validated the product with 259 passing tests and visual checks at five viewport widths.",
+    ],
+    links: [{ label: "Live site", href: "https://www.pailaapp.com/" }],
+  },
   {
     slug: "earth-twin",
     name: "Earth Twin",
@@ -28,22 +63,6 @@ export const projects: Project[] = [
     ],
   },
   {
-    slug: "atlas-jobs",
-    name: "Atlas Jobs",
-    tagline: "Distributed job processing system",
-    status: "Featured",
-    accent: "#7c83ff",
-    summary:
-      "Engineered a horizontally scalable worker system focused on reliability, throughput, and safe recovery after crashes.",
-    tech: ["Java", "Spring Boot", "PostgreSQL", "Docker", "Flyway", "k6"],
-    tags: ["Featured", "Backend", "Java"],
-    highlights: [
-      "Handled 145+ req/s at 0% failure using PostgreSQL row-level locking and scaled workers.",
-      "Improved throughput from 0.67 to 1.64 jobs/s with atomic claim-and-update transitions.",
-      "Prevented job loss with stale RUNNING recovery and idempotency-key dedupe for safe re-queues.",
-    ],
-  },
-  {
     slug: "gus-marketplace",
     name: "GUS Marketplace",
     tagline: "Marketplace platform with secure media uploads",
@@ -55,7 +74,7 @@ export const projects: Project[] = [
     tags: ["Featured", "Full Stack", "Java"],
     highlights: [
       "Supported 100+ users and 120+ listings with authenticated listing management and protected views.",
-      "Integrated JWT auth, owner-based authorization, and presigned S3 uploads for secure image handling.",
+      "Integrated JWT authentication, owner-based authorization, and presigned S3 uploads for secure image handling.",
       "Deployed with Docker and Cloud Run for zero-downtime releases.",
     ],
   },
@@ -86,8 +105,8 @@ export const projects: Project[] = [
     tech: ["Python", "scikit-learn", "pandas", "Flask", "JavaScript", "HTML", "CSS"],
     tags: ["AI/ML", "Python", "Full Stack"],
     highlights: [
-      "Trained and compared 4 regression models with cross-validation and achieved an R^2 score of 0.7-0.9.",
-      "Engineered derived features like vehicle age and price-per-mile to improve predictive performance.",
+      "Trained and compared four regression models with cross-validation and achieved an R² score of 0.7–0.9.",
+      "Engineered derived features such as vehicle age and price per mile to improve predictive performance.",
       "Connected a responsive frontend to a Flask backend for real-time predictions and model metadata.",
     ],
   },
@@ -103,7 +122,7 @@ export const projects: Project[] = [
     tags: ["Full Stack", "Java", "Backend"],
     highlights: [
       "Delivered real-time bidirectional messaging without refresh using WebSocket and STOMP.",
-      "Integrated Spring Data JPA with MySQL for persistent user records and fast repository queries.",
+      "Integrated Spring Data JPA with MySQL for persistent user records and repository queries.",
       "Secured account creation with BCrypt password hashing and email uniqueness validation.",
     ],
   },

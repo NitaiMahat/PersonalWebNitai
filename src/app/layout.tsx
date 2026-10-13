@@ -1,34 +1,14 @@
-import type { Metadata, Viewport } from "next";
-import { Space_Grotesk, Inter } from "next/font/google";
+import type { Metadata } from "next";
 import "./globals.css";
 
-const spaceGrotesk = Space_Grotesk({
-  variable: "--font-display",
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-});
-
-const inter = Inter({
-  variable: "--font-body",
-  subsets: ["latin"],
-  weight: ["300", "400", "500"],
-});
-
-export const viewport: Viewport = {
-  width: "device-width",
-  initialScale: 1,
-  maximumScale: 5,
-  themeColor: "#0b0b0f",
-};
-
 export const metadata: Metadata = {
-  title: "Nitai Mahat — Portfolio",
+  title: "Nitai Mahat | Software Developer",
   description:
-    "Personal portfolio of Nitai Mahat — building interactive things for the web.",
+    "Computer Science and Data Science student building reliable backend, full-stack, and research software with Java, Python, TypeScript, and Flutter.",
   openGraph: {
-    title: "Nitai Mahat — Portfolio",
+    title: "Nitai Mahat | Software Developer",
     description:
-      "Personal portfolio of Nitai Mahat — building interactive things for the web.",
+      "Computer Science and Data Science student building reliable backend, full-stack, and research software.",
     type: "website",
   },
 };
@@ -39,11 +19,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html
-      lang="en"
-      className={`${spaceGrotesk.variable} ${inter.variable} h-full antialiased`}
-    >
-      <body className="min-h-full">{children}</body>
+    <html lang="en" className="h-full antialiased">
+      <body className="min-h-full">
+        <a href="#main-content" className="skip-link">Skip to content</a>
+        {children}
+      </body>
     </html>
   );
 }
