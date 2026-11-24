@@ -4,7 +4,7 @@ import { useMemo } from "react";
 
 function seededRandom(seed: number) {
   const value = Math.sin(seed * 9301 + 49297) * 49297;
-  return value - Math.floor(value);
+  return Number((value - Math.floor(value)).toFixed(5));
 }
 
 /**

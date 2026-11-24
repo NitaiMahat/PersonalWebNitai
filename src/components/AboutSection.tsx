@@ -455,7 +455,16 @@ export default function AboutSection() {
   const [open, setOpen] = useState(false);
   const [page, setPage] = useState(0);
   const [finishing, setFinishing] = useState(false);
+  const [compactBook, setCompactBook] = useState(true);
   const reduce = useReducedMotion();
+
+  useEffect(() => {
+    const query = window.matchMedia("(max-width: 767px)");
+    const sync = () => setCompactBook(query.matches);
+    sync();
+    query.addEventListener("change", sync);
+    return () => query.removeEventListener("change", sync);
+  }, []);
 
   const sectionRef = useRef<HTMLElement>(null);
   const inView = useInView(sectionRef, { margin: "200px" });
@@ -514,6 +523,7 @@ export default function AboutSection() {
   const holdTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const autoTimer = useRef<ReturnType<typeof setInterval> | null>(null);
   const downAt = useRef(0);
+  const pointerStart = useRef({ x: 0, y: 0, cancelled: false });
 
   const stopHold = () => {
     if (holdTimer.current) clearTimeout(holdTimer.current);
@@ -523,8 +533,9 @@ export default function AboutSection() {
   };
   useEffect(() => stopHold, []);
 
-  const onPointerDown = () => {
+  const onPointerDown = (event: React.PointerEvent) => {
     if (!open) return;
+    pointerStart.current = { x: event.clientX, y: event.clientY, cancelled: false };
     downAt.current = Date.now();
     holdTimer.current = setTimeout(() => {
       autoTimer.current = setInterval(() => {
@@ -542,6 +553,7 @@ export default function AboutSection() {
     if (!open) return;
     const held = Date.now() - downAt.current;
     stopHold();
+    if (pointerStart.current.cancelled) return;
     if (held < 280) advance(); // quick tap = one page
   };
 
@@ -565,15 +577,15 @@ export default function AboutSection() {
 
           <motion.div
             data-cursor={open ? "hold" : "open"}
-            className="relative z-10 h-[460px] w-[320px] cursor-pointer"
+            className="relative z-10 h-[460px] w-[min(320px,calc(100vw-3rem))] cursor-pointer touch-pan-y"
             style={{
               transformStyle: "preserve-3d",
               rotateX: open || finishing ? 0 : rotateX,
               rotateY: open || finishing ? 0 : rotateY,
             }}
             animate={{
-              scale: finishing ? 0.5 : open ? 1.08 : 1,
-              x: finishing ? 0 : open ? 150 : 0,
+              scale: finishing ? 0.5 : open && !compactBook ? 1.08 : 1,
+              x: finishing ? 0 : open && !compactBook ? 150 : 0,
               y: reduce ? 0 : finishing ? -50 : open ? 0 : [0, -10, 0],
               opacity: finishing ? 0 : 1,
             }}
@@ -589,6 +601,13 @@ export default function AboutSection() {
             onClick={() => !open && setOpen(true)}
             onPointerDown={onPointerDown}
             onPointerUp={onPointerUp}
+            onPointerMove={(event) => {
+              if (Math.hypot(event.clientX - pointerStart.current.x, event.clientY - pointerStart.current.y) > 10) {
+                pointerStart.current.cancelled = true;
+                stopHold();
+              }
+            }}
+            onPointerCancel={stopHold}
             onPointerLeave={stopHold}
           >
             {/* spine + left inside page (behind the leaves) */}
@@ -706,7 +725,7 @@ export default function AboutSection() {
               <button
                 onClick={back}
                 disabled={page === 0}
-                className="grid h-8 w-8 place-items-center rounded-full border border-white/20 bg-white/5 text-foreground/80 backdrop-blur-md transition-colors hover:border-accent-soft/60 disabled:opacity-30"
+                className="grid h-11 w-11 place-items-center rounded-full border border-white/20 bg-white/5 text-foreground/80 backdrop-blur-md transition-colors hover:border-accent-soft/60 disabled:opacity-30"
                 aria-label="Previous page"
               >
                 ‹
@@ -716,27 +735,29 @@ export default function AboutSection() {
                   setOpen(false);
                   setPage(0);
                 }}
-                className="rounded-full border border-white/20 bg-white/5 px-5 py-2 text-xs uppercase tracking-[0.2em] text-foreground/80 backdrop-blur-md transition-colors hover:border-accent-soft/60 hover:text-white"
+                className="min-h-11 rounded-full border border-white/20 bg-white/5 px-5 py-2 text-sm tracking-wide text-foreground/80 backdrop-blur-md transition-colors hover:border-accent-soft/60 hover:text-white"
               >
                 Close book
               </button>
               <button
                 onClick={advance}
                 disabled={page === last}
-                className="grid h-8 w-8 place-items-center rounded-full border border-white/20 bg-white/5 text-foreground/80 backdrop-blur-md transition-colors hover:border-accent-soft/60 disabled:opacity-30"
+                className="grid h-11 w-11 place-items-center rounded-full border border-white/20 bg-white/5 text-foreground/80 backdrop-blur-md transition-colors hover:border-accent-soft/60 disabled:opacity-30"
                 aria-label="Next page"
               >
                 ›
               </button>
             </>
           ) : (
-            <motion.p
-              className="text-xs uppercase tracking-[0.25em] text-muted/70"
+            <motion.button
+              type="button"
+              onClick={() => setOpen(true)}
+              className="min-h-11 rounded-full border border-white/15 px-5 py-2 text-sm tracking-wide text-muted"
               animate={{ opacity: [0.4, 1, 0.4] }}
               transition={{ duration: 2.4, repeat: Infinity, ease: "easeInOut" }}
             >
-              Click the book to open
-            </motion.p>
+              Open the book
+            </motion.button>
           )}
         </div>
         {open && (

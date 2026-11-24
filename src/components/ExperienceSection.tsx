@@ -132,14 +132,16 @@ function buildPipe(pts: { x: number; y: number }[], r = 26) {
 export default function ExperienceSection() {
   const sectionRef = useRef<HTMLElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
   const inView = useInView(sectionRef, { margin: "-15%" });
+  const entered = useInView(sectionRef, { once: true, margin: "-15%" });
 
   const [size, setSize] = useState({ w: 0, h: 0 });
   const [lit, setLit] = useState(0);
   const [active, setActive] = useState<number | null>(null);
   const [hovered, setHovered] = useState<number | null>(null);
+  const [selected, setSelected] = useState<number | null>(null);
   const [playing, setPlaying] = useState(false);
-  const played = useRef(false);
   const reduce = useReducedMotion();
 
   useEffect(() => {
@@ -160,31 +162,36 @@ export default function ExperienceSection() {
   const pipeD = useMemo(() => buildPipe(pts), [pts]);
 
   useEffect(() => {
-    if (!inView || played.current || size.w === 0) return;
-    played.current = true;
+    if (!entered) return;
     setPlaying(true);
-    const cum = [0];
-    for (let i = 1; i < pts.length; i++) {
-      cum[i] = cum[i - 1] + Math.abs(pts[i].x - pts[i - 1].x) + Math.abs(pts[i].y - pts[i - 1].y);
-    }
-    const total = cum[cum.length - 1] || 1;
     const D = reduce ? 0 : 3200;
     const timers = exps.map((_, i) =>
       setTimeout(() => {
         setLit((v) => Math.max(v, i + 1));
         setActive(i);
-      }, 400 + (cum[i] / total) * D)
+      }, (reduce ? 0 : 400) + (i / (exps.length - 1)) * D)
     );
-    // After the intro, don't keep a popup pinned — it's hover-only from here.
     const clear = setTimeout(() => setActive(null), 400 + D + 1200);
     return () => {
       timers.forEach(clearTimeout);
       clearTimeout(clear);
     };
-  }, [inView, size, pts, reduce]);
+  }, [entered, reduce]);
 
-  const displayActive = hovered ?? active;
-  const isLit = (i: number) => i < lit || i === hovered;
+  const displayActive = hovered ?? selected ?? active;
+  const mobileActive = selected ?? 0;
+  const isLit = (i: number) => i < lit || i === hovered || i === selected;
+
+  const selectExperience = (index: number) => {
+    setSelected(index);
+    const scroller = scrollRef.current;
+    if (scroller) {
+      scroller.scrollTo({
+        left: (exps[index].x / 100) * size.w - scroller.clientWidth / 2,
+        behavior: reduce ? "instant" : "smooth",
+      });
+    }
+  };
 
   return (
     <section
@@ -202,163 +209,169 @@ export default function ExperienceSection() {
         A résumé-aligned timeline of the work, research, and fellowship experience behind my projects.
       </p>
 
-      <div className="relative z-10 grid w-full max-w-xl gap-4 md:hidden">
-        {exps.map((e, i) => (
-          <motion.article
-            key={`${e.org}-${e.period}`}
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: "-8%" }}
-            transition={{ duration: reduce ? 0 : 0.45, delay: reduce ? 0 : i * 0.05 }}
-            className="rounded-2xl border border-white/10 bg-white/[0.055] p-5 backdrop-blur-sm"
-          >
-            <div className="flex items-start gap-4">
-              <div className="grid h-11 w-11 shrink-0 place-items-center rounded-xl border bg-black/20" style={{ borderColor: `${e.color}66`, color: e.color }}>
-                {e.icon}
-              </div>
-              <div className="min-w-0">
-                <p className="text-[0.65rem] font-semibold uppercase tracking-[0.18em]" style={{ color: e.color }}>{e.period}</p>
-                <h3 className="mt-1 font-display text-base font-bold text-white">{e.role}</h3>
-                <p className="text-sm text-white/80">{e.org} · {e.location}</p>
-              </div>
-            </div>
-            <ul className="mt-4 space-y-2">
-              {e.bullets.map((bullet) => (
-                <li key={bullet} className="flex gap-2 text-sm leading-6 text-muted">
-                  <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: e.color }} />
-                  <span>{bullet}</span>
-                </li>
-              ))}
-            </ul>
-          </motion.article>
-        ))}
-      </div>
-
-      <div ref={stageRef} className="relative z-10 hidden w-full max-w-6xl md:block" style={{ aspectRatio: "16 / 8" }}>
-        {size.w > 0 && (
-          <svg className="pointer-events-none absolute inset-0 h-full w-full overflow-visible" viewBox={`0 0 ${size.w} ${size.h}`}>
-            <defs>
-              <linearGradient id="pipeGrad" x1="0" y1="0" x2="1" y2="0">
-                <stop offset="0" stopColor="#2dd4bf" />
-                <stop offset="0.167" stopColor="#2fd27a" />
-                <stop offset="0.333" stopColor="#ff6a2b" />
-                <stop offset="0.5" stopColor="#38bdf8" />
-                <stop offset="0.667" stopColor="#ec4899" />
-                <stop offset="0.833" stopColor="#9d4edd" />
-                <stop offset="1" stopColor="#f59e0b" />
-              </linearGradient>
-            </defs>
-            <path d={pipeD} stroke="rgba(255,255,255,0.06)" strokeWidth={3} fill="none" />
-            <motion.path
-              d={pipeD} stroke="url(#pipeGrad)" strokeWidth={16} fill="none" strokeLinecap="round" strokeLinejoin="round"
-              style={{ filter: "blur(7px)", opacity: 0.5 }}
-              initial={{ pathLength: 0 }} animate={{ pathLength: playing ? 1 : 0 }} transition={{ duration: 7, ease: "easeInOut" }}
-            />
-            <motion.path
-              d={pipeD} stroke="url(#pipeGrad)" strokeWidth={7} fill="none" strokeLinecap="round" strokeLinejoin="round"
-              initial={{ pathLength: 0 }} animate={{ pathLength: playing ? 1 : 0 }} transition={{ duration: 7, ease: "easeInOut" }}
-            />
-            <motion.path
-              d={pipeD} stroke="#fff" strokeWidth={2} fill="none" strokeLinecap="round" strokeLinejoin="round"
-              style={{ filter: "drop-shadow(0 0 4px #fff)" }}
-              initial={{ pathLength: 0 }} animate={{ pathLength: playing ? 1 : 0 }} transition={{ duration: 7, ease: "easeInOut" }}
-            />
-          </svg>
-        )}
-
-        {exps.map((e, i) => {
-          const litNow = isLit(i);
-          return (
-            <div
-              key={i}
-              className="absolute z-10"
-              style={{ left: `${e.x}%`, top: `${e.y}%`, transform: "translate(-50%,-50%)", perspective: "800px" }}
-            >
-              <div className="absolute left-1/2 top-[52px] h-8 w-28 -translate-x-1/2 rounded-[50%] blur-xl transition-all duration-500" style={{ background: e.color, opacity: litNow ? 0.7 : 0.12 }} />
-              <div className="absolute left-1/2 top-[48px] h-14 w-24 -translate-x-1/2 rounded-2xl border transition-all duration-500" style={{ borderColor: litNow ? e.color : "rgba(255,255,255,0.08)", boxShadow: litNow ? `0 0 22px ${e.color}66` : "none" }} />
-              <div className="absolute left-1/2 top-[104px] h-9 w-20 -translate-x-1/2 rounded-[50%] blur-md transition-opacity duration-500" style={{ background: e.color, opacity: litNow ? 0.18 : 0 }} />
-
-              <motion.button
-                data-cursor="view"
-                onMouseEnter={() => setHovered(i)}
-                onMouseLeave={() => setHovered(null)}
-                onFocus={() => setHovered(i)}
-                onBlur={() => setHovered(null)}
-                className="pointer-events-auto relative block cursor-pointer"
-                animate={reduce ? undefined : { y: [0, -8, 0] }}
-                transition={{ duration: 4 + i * 0.4, repeat: Infinity, ease: "easeInOut", delay: i * 0.3 }}
-                aria-label={`${e.role} at ${e.org}`}
-              >
-                <div style={{ transform: "rotateX(22deg)", transformStyle: "preserve-3d" }}>
-                  <div className="absolute inset-0 rounded-[1.3rem]" style={{ transform: "translateZ(-18px)", background: "#050507" }} />
-                  <div
-                    className="relative grid h-24 w-24 place-items-center rounded-[1.3rem] border"
-                    style={{
-                      background: "linear-gradient(155deg,#2a2a33 0%,#131318 55%,#0a0a0e 100%)",
-                      borderColor: litNow ? `${e.color}aa` : "rgba(255,255,255,0.14)",
-                      color: litNow ? "#fff" : "rgba(255,255,255,0.55)",
-                      boxShadow: litNow
-                        ? `0 0 32px ${e.color}77, inset 0 2px 0 rgba(255,255,255,0.18), inset 0 -12px 22px rgba(0,0,0,0.65), inset 0 -2px 0 ${e.color}`
-                        : "inset 0 2px 0 rgba(255,255,255,0.10), inset 0 -12px 22px rgba(0,0,0,0.65)",
-                    }}
-                  >
-                    <span className="pointer-events-none absolute inset-x-3 top-2 h-7 rounded-full bg-white/12 blur-md" />
-                    {e.icon}
-                  </div>
-                </div>
-                <span className="absolute -right-1 top-2 h-1.5 w-1.5 rounded-full transition-all duration-500" style={{ background: "#ff6a2b", boxShadow: litNow ? "0 0 10px #ff6a2b" : "none", opacity: litNow ? 1 : 0.4 }} />
-              </motion.button>
-
-              <div className="absolute left-1/2 top-[132px] w-32 -translate-x-1/2 text-center">
-                <p className="font-display text-[0.72rem] font-semibold leading-tight text-white/90">{e.org}</p>
-                <p className="mt-0.5 text-[0.6rem] uppercase tracking-[0.1em] text-muted/70">{e.period}</p>
-              </div>
-            </div>
-          );
-        })}
-
-        <AnimatePresence mode="wait">
-          {displayActive !== null && isLit(displayActive) && (
-            <motion.div
-              key={displayActive}
-              className="pointer-events-none absolute z-30 w-72"
-              style={{
-                left: exps[displayActive].x < 50 ? `calc(${exps[displayActive].x}% + 90px)` : `calc(${exps[displayActive].x}% - 90px)`,
-                top: `${exps[displayActive].y}%`,
-                transform: exps[displayActive].x < 50 ? "translateY(-50%)" : "translate(-100%,-50%)",
-              }}
-              initial={{ opacity: 0, scale: 0.92 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.92 }}
-              transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
-            >
-              <div className="rounded-2xl border bg-white/[0.07] p-5 text-left shadow-[0_8px_40px_rgba(0,0,0,0.55)] backdrop-blur-xl" style={{ borderColor: `${exps[displayActive].color}55` }}>
-                <div className="flex items-center justify-between">
-                  <span className="font-display text-[0.65rem] uppercase tracking-[0.2em]" style={{ color: exps[displayActive].color }}>
-                    {exps[displayActive].period}
-                  </span>
-                  <span className="h-1.5 w-1.5 rounded-full" style={{ background: exps[displayActive].color }} />
-                </div>
-                <h3 className="mt-2 font-display text-base font-bold leading-snug text-white">{exps[displayActive].role}</h3>
-                <p className="text-sm text-white/80">{exps[displayActive].org}</p>
-                <p className="text-[0.7rem] text-muted">{exps[displayActive].location}</p>
-                <div className="my-3 h-px w-full bg-white/10" />
-                <ul className="space-y-2">
-                  {exps[displayActive].bullets.map((b, bi) => (
-                    <li key={bi} className="flex gap-2 text-[0.78rem] leading-relaxed text-muted">
-                      <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full" style={{ background: exps[displayActive].color }} />
-                      {b}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </motion.div>
+      <p id="experience-instructions" className="relative z-10 text-center text-sm text-muted min-[1200px]:hidden">
+        Swipe through the timeline · Tap a tile to read its story
+      </p>
+      <div
+        ref={scrollRef}
+        className="experience-scroll relative z-10 w-full max-w-6xl overflow-x-auto overscroll-x-contain"
+        role="region"
+        aria-label="Work experience timeline"
+        aria-describedby="experience-instructions"
+        tabIndex={0}
+      >
+        <div ref={stageRef} className="relative h-[480px] w-full min-w-[1152px] min-[1200px]:h-auto" style={{ aspectRatio: "16 / 8" }}>
+          {size.w > 0 && (
+            <svg className="pointer-events-none absolute inset-0 h-full w-full overflow-visible" viewBox={`0 0 ${size.w} ${size.h}`}>
+              <defs>
+                <linearGradient id="pipeGrad" x1="0" y1="0" x2="1" y2="0">
+                  <stop offset="0" stopColor="#2dd4bf" />
+                  <stop offset="0.167" stopColor="#2fd27a" />
+                  <stop offset="0.333" stopColor="#ff6a2b" />
+                  <stop offset="0.5" stopColor="#38bdf8" />
+                  <stop offset="0.667" stopColor="#ec4899" />
+                  <stop offset="0.833" stopColor="#9d4edd" />
+                  <stop offset="1" stopColor="#f59e0b" />
+                </linearGradient>
+              </defs>
+              <path d={pipeD} stroke="rgba(255,255,255,0.06)" strokeWidth={3} fill="none" />
+              <motion.path
+                d={pipeD} stroke="url(#pipeGrad)" strokeWidth={16} fill="none" strokeLinecap="round" strokeLinejoin="round"
+                style={{ filter: "blur(7px)", opacity: 0.5 }}
+                initial={{ pathLength: 0 }} animate={{ pathLength: playing ? 1 : 0 }} transition={{ duration: reduce ? 0 : 3.2, ease: "easeInOut" }}
+              />
+              <motion.path
+                d={pipeD} stroke="url(#pipeGrad)" strokeWidth={7} fill="none" strokeLinecap="round" strokeLinejoin="round"
+                initial={{ pathLength: 0 }} animate={{ pathLength: playing ? 1 : 0 }} transition={{ duration: reduce ? 0 : 3.2, ease: "easeInOut" }}
+              />
+              <motion.path
+                d={pipeD} stroke="#fff" strokeWidth={2} fill="none" strokeLinecap="round" strokeLinejoin="round"
+                style={{ filter: "drop-shadow(0 0 4px #fff)" }}
+                initial={{ pathLength: 0 }} animate={{ pathLength: playing ? 1 : 0 }} transition={{ duration: reduce ? 0 : 3.2, ease: "easeInOut" }}
+              />
+            </svg>
           )}
-        </AnimatePresence>
+
+          {exps.map((e, i) => {
+            const litNow = isLit(i);
+            return (
+              <div
+                key={i}
+                className="absolute z-10"
+                style={{ left: `${e.x}%`, top: `${e.y}%`, transform: "translate(-50%,-50%)", perspective: "800px" }}
+              >
+                <div className="absolute left-1/2 top-[52px] h-8 w-28 -translate-x-1/2 rounded-[50%] blur-xl transition-all duration-500" style={{ background: e.color, opacity: litNow ? 0.7 : 0.12 }} />
+                <div className="absolute left-1/2 top-[48px] h-14 w-24 -translate-x-1/2 rounded-2xl border transition-all duration-500" style={{ borderColor: litNow ? e.color : "rgba(255,255,255,0.08)", boxShadow: litNow ? `0 0 22px ${e.color}66` : "none" }} />
+                <div className="absolute left-1/2 top-[104px] h-9 w-20 -translate-x-1/2 rounded-[50%] blur-md transition-opacity duration-500" style={{ background: e.color, opacity: litNow ? 0.18 : 0 }} />
+
+                <motion.button
+                  type="button"
+                  data-cursor="view"
+                  onPointerEnter={(event) => { if (event.pointerType !== "touch") setHovered(i); }}
+                  onPointerLeave={() => setHovered(null)}
+                  onFocus={() => setHovered(i)}
+                  onBlur={() => setHovered(null)}
+                  onClick={() => selectExperience(i)}
+                  className="pointer-events-auto relative block cursor-pointer"
+                  animate={reduce ? undefined : { y: [0, -8, 0] }}
+                  transition={{ duration: 4 + i * 0.4, repeat: Infinity, ease: "easeInOut", delay: i * 0.3 }}
+                  aria-label={`${e.role} at ${e.org}`}
+                  aria-pressed={selected === i}
+                  aria-controls="experience-details"
+                >
+                  <div style={{ transform: "rotateX(22deg)", transformStyle: "preserve-3d" }}>
+                    <div className="absolute inset-0 rounded-[1.3rem]" style={{ transform: "translateZ(-18px)", background: "#050507" }} />
+                    <div
+                      className="relative grid h-24 w-24 place-items-center rounded-[1.3rem] border"
+                      style={{
+                        background: "linear-gradient(155deg,#2a2a33 0%,#131318 55%,#0a0a0e 100%)",
+                        borderColor: litNow ? `${e.color}aa` : "rgba(255,255,255,0.14)",
+                        color: litNow ? "#fff" : "rgba(255,255,255,0.55)",
+                        boxShadow: litNow
+                          ? `0 0 32px ${e.color}77, inset 0 2px 0 rgba(255,255,255,0.18), inset 0 -12px 22px rgba(0,0,0,0.65), inset 0 -2px 0 ${e.color}`
+                          : "inset 0 2px 0 rgba(255,255,255,0.10), inset 0 -12px 22px rgba(0,0,0,0.65)",
+                      }}
+                    >
+                      <span className="pointer-events-none absolute inset-x-3 top-2 h-7 rounded-full bg-white/12 blur-md" />
+                      {e.icon}
+                    </div>
+                  </div>
+                  <span className="absolute -right-1 top-2 h-1.5 w-1.5 rounded-full transition-all duration-500" style={{ background: "#ff6a2b", boxShadow: litNow ? "0 0 10px #ff6a2b" : "none", opacity: litNow ? 1 : 0.4 }} />
+                </motion.button>
+
+                <div className="absolute left-1/2 top-[132px] w-36 -translate-x-1/2 text-center">
+                  <p className="font-display text-sm font-semibold leading-tight text-white/90">{e.org}</p>
+                  <p className="mt-1 text-xs uppercase tracking-[0.06em] text-muted">{e.period}</p>
+                </div>
+              </div>
+            );
+          })}
+
+          <AnimatePresence mode="wait">
+            {displayActive !== null && isLit(displayActive) && (
+              <motion.div
+                key={displayActive}
+                className="pointer-events-none absolute z-30 hidden w-72 min-[1200px]:block"
+                style={{
+                  left: exps[displayActive].x < 50 ? `calc(${exps[displayActive].x}% + 90px)` : `calc(${exps[displayActive].x}% - 90px)`,
+                  top: `${exps[displayActive].y}%`,
+                  transform: exps[displayActive].x < 50 ? "translateY(-50%)" : "translate(-100%,-50%)",
+                }}
+                initial={{ opacity: 0, scale: 0.92 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.92 }}
+                transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+              >
+                <div className="rounded-2xl border bg-white/[0.07] p-5 text-left shadow-[0_8px_40px_rgba(0,0,0,0.55)] backdrop-blur-xl" style={{ borderColor: `${exps[displayActive].color}55` }}>
+                  <div className="flex items-center justify-between">
+                    <span className="font-display text-[0.65rem] uppercase tracking-[0.2em]" style={{ color: exps[displayActive].color }}>
+                      {exps[displayActive].period}
+                    </span>
+                    <span className="h-1.5 w-1.5 rounded-full" style={{ background: exps[displayActive].color }} />
+                  </div>
+                  <h3 className="mt-2 font-display text-base font-bold leading-snug text-white">{exps[displayActive].role}</h3>
+                  <p className="text-sm text-white/80">{exps[displayActive].org}</p>
+                  <p className="text-[0.7rem] text-muted">{exps[displayActive].location}</p>
+                  <div className="my-3 h-px w-full bg-white/10" />
+                  <ul className="space-y-2">
+                    {exps[displayActive].bullets.map((b, bi) => (
+                      <li key={bi} className="flex gap-2 text-[0.78rem] leading-relaxed text-muted">
+                        <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full" style={{ background: exps[displayActive].color }} />
+                        {b}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
       </div>
 
-      <p className="relative z-10 mt-10 hidden text-[0.7rem] uppercase tracking-[0.2em] text-muted/50 md:block">
-        hover a tile to revisit its story
+      <div className="relative z-10 mt-6 w-full max-w-xl min-[1200px]:hidden">
+        <div className="mb-4 flex items-center justify-between gap-3">
+          <button type="button" onClick={() => selectExperience(Math.max(0, mobileActive - 1))} disabled={mobileActive === 0} className="min-h-11 rounded-full border border-white/15 px-4 text-sm text-white/80 disabled:opacity-30" aria-label="Previous experience">Previous</button>
+          <span className="text-sm text-muted">{mobileActive + 1} / {exps.length}</span>
+          <button type="button" onClick={() => selectExperience(Math.min(exps.length - 1, mobileActive + 1))} disabled={mobileActive === exps.length - 1} className="min-h-11 rounded-full border border-white/15 px-4 text-sm text-white/80 disabled:opacity-30" aria-label="Next experience">Next</button>
+        </div>
+        <article id="experience-details" aria-live="polite" aria-atomic="true" className="rounded-2xl border bg-white/[0.055] p-5 shadow-[0_8px_40px_rgba(0,0,0,0.35)] backdrop-blur-xl" style={{ borderColor: `${exps[mobileActive].color}55` }}>
+          <p className="text-sm font-semibold" style={{ color: exps[mobileActive].color }}>{exps[mobileActive].period}</p>
+          <h3 className="mt-2 font-display text-lg font-bold leading-snug text-white">{exps[mobileActive].role}</h3>
+          <p className="mt-1 text-base text-white/80">{exps[mobileActive].org}</p>
+          <p className="mt-1 text-sm text-muted">{exps[mobileActive].location}</p>
+          <ul className="mt-4 space-y-3">
+            {exps[mobileActive].bullets.map((bullet) => (
+              <li key={bullet} className="flex gap-3 text-base leading-7 text-muted">
+                <span className="mt-3 h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: exps[mobileActive].color }} />
+                <span>{bullet}</span>
+              </li>
+            ))}
+          </ul>
+        </article>
+      </div>
+
+      <p className="relative z-10 mt-10 hidden text-sm tracking-wide text-muted min-[1200px]:block">
+        Hover or select a tile to revisit its story
       </p>
     </section>
   );

@@ -1,7 +1,7 @@
 "use client";
 
-import { AnimatePresence, motion } from "motion/react";
-import { useEffect, useState, useMemo } from "react";
+import { AnimatePresence, motion, useReducedMotion } from "motion/react";
+import { useEffect, useRef, useState, useMemo } from "react";
 import {
   projectFilters,
   projects,
@@ -20,7 +20,7 @@ function getVisibleProjects(filter: ProjectFilter) {
 
 function seededRand(seed: number) {
   const x = Math.sin(seed * 9301 + 49297) * 49297;
-  return x - Math.floor(x);
+  return Number((x - Math.floor(x)).toFixed(5));
 }
 
 /* ── Deep Space Stars ────────────────────────────────────────────────── */
@@ -81,17 +81,43 @@ function NebulaFog() {
 export default function ProjectsSection() {
   const [activeFilter, setActiveFilter] = useState<ProjectFilter>("All");
   const [activeSlug, setActiveSlug] = useState<string | null>(null);
-  const visibleProjects = getVisibleProjects(activeFilter);
+  const visibleProjects = useMemo(() => getVisibleProjects(activeFilter), [activeFilter]);
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const closeRef = useRef<HTMLButtonElement>(null);
+  const reduce = useReducedMotion();
   const activeProject =
     visibleProjects.find((project) => project.slug === activeSlug) ?? null;
 
   useEffect(() => {
+    if (!activeSlug) return;
+    const previousFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const frame = requestAnimationFrame(() => closeRef.current?.focus({ preventScroll: true }));
     function handleKey(e: KeyboardEvent) {
       if (e.key === "Escape") setActiveSlug(null);
+      if (e.key === "Tab") {
+        const elements = dialogRef.current?.querySelectorAll<HTMLElement>("a[href], button:not([disabled]), [tabindex='0']");
+        if (!elements?.length) return;
+        const first = elements[0];
+        const last = elements[elements.length - 1];
+        if (e.shiftKey && document.activeElement === first) {
+          e.preventDefault();
+          last.focus();
+        } else if (!e.shiftKey && document.activeElement === last) {
+          e.preventDefault();
+          first.focus();
+        }
+      }
     }
     window.addEventListener("keydown", handleKey);
-    return () => window.removeEventListener("keydown", handleKey);
-  }, []);
+    return () => {
+      cancelAnimationFrame(frame);
+      window.removeEventListener("keydown", handleKey);
+      document.body.style.overflow = previousOverflow;
+      previousFocus?.focus({ preventScroll: true });
+    };
+  }, [activeSlug]);
 
   return (
     <section
@@ -116,7 +142,7 @@ export default function ProjectsSection() {
           transition={{ duration: 0.7 }}
           className="mb-2 sm:mb-4"
         >
-          <p className="text-[0.6rem] sm:text-[0.65rem] font-bold uppercase tracking-[0.45em] text-cyan-400/80">
+          <p className="text-sm font-bold uppercase tracking-[0.3em] text-cyan-400/80">
             Mission Log
           </p>
           <h2
@@ -134,11 +160,12 @@ export default function ProjectsSection() {
                 <button
                   key={filter}
                   type="button"
+                  aria-pressed={active}
                   onClick={() => {
                     setActiveFilter(filter);
                     setActiveSlug(null);
                   }}
-                  className={`shrink-0 rounded-full px-3.5 sm:px-4 py-1 sm:py-1.5 text-[0.58rem] sm:text-[0.62rem] font-bold uppercase tracking-[0.2em] transition-all duration-300 ${
+                  className={`min-h-11 shrink-0 rounded-full px-4 py-2 text-sm font-bold uppercase tracking-[0.12em] transition-colors duration-300 ${
                     active
                       ? "border border-cyan-400/40 bg-cyan-500/15 text-cyan-200 shadow-[0_0_20px_rgba(6,182,212,0.25)]"
                       : "border border-white/5 bg-white/[0.02] text-slate-400 hover:border-white/20 hover:bg-white/[0.06] hover:text-white"
@@ -178,8 +205,9 @@ export default function ProjectsSection() {
             />
 
             <motion.div
+              ref={dialogRef}
               key={activeProject.slug}
-              initial={{ opacity: 0, y: 35, scale: 0.94 }}
+              initial={{ opacity: 0, y: reduce ? 0 : 35, scale: reduce ? 1 : 0.94 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 20, scale: 0.96 }}
               transition={{ duration: 0.38, ease: [0.22, 1, 0.36, 1] }}
@@ -187,7 +215,7 @@ export default function ProjectsSection() {
               role="dialog"
               aria-modal="true"
               aria-labelledby="project-dialog-title"
-              className="relative w-[95vw] sm:w-full max-w-2xl max-h-[88vh] overflow-y-auto rounded-[24px] sm:rounded-[28px] border border-cyan-500/30 bg-slate-950/95 p-5 sm:p-6 md:p-8 shadow-[0_0_80px_rgba(6,182,212,0.25)] backdrop-blur-2xl"
+              className="project-dialog relative w-full max-w-2xl max-h-[88dvh] overflow-y-auto overscroll-contain rounded-[24px] sm:rounded-[28px] border border-cyan-500/30 bg-slate-950/95 p-5 sm:p-6 md:p-8 shadow-[0_0_80px_rgba(6,182,212,0.25)] backdrop-blur-2xl"
             >
               {/* Top Accent Line */}
               <div
@@ -202,7 +230,7 @@ export default function ProjectsSection() {
                 <div className="flex items-start justify-between gap-3">
                   <div>
                     <span
-                      className="text-[0.6rem] sm:text-[0.65rem] font-bold uppercase tracking-[0.32em]"
+                      className="text-sm font-bold uppercase tracking-[0.2em]"
                       style={{ color: activeProject.accent }}
                     >
                       {activeProject.status}
@@ -210,15 +238,16 @@ export default function ProjectsSection() {
                     <h3 id="project-dialog-title" className="mt-1 font-display text-xl sm:text-2xl md:text-3xl font-bold text-white">
                       {activeProject.name}
                     </h3>
-                    <p className="mt-1.5 sm:mt-2 text-xs sm:text-sm leading-relaxed text-slate-300">
+                    <p className="mt-2 text-base leading-relaxed text-slate-300">
                       {activeProject.summary}
                     </p>
                   </div>
                   <button
+                    ref={closeRef}
                     type="button"
                     onClick={() => setActiveSlug(null)}
                     aria-label="Close project details"
-                    className="shrink-0 rounded-full border border-white/10 bg-white/5 p-2 text-slate-400 hover:border-white/30 hover:text-white"
+                    className="grid h-11 w-11 shrink-0 place-items-center rounded-full border border-white/10 bg-white/5 text-slate-400 hover:border-white/30 hover:text-white"
                   >
                     <svg className="h-4 sm:h-5 w-4 sm:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -228,12 +257,12 @@ export default function ProjectsSection() {
 
                 {/* Highlights */}
                 <div className="mt-5 sm:mt-6 rounded-2xl border border-white/10 bg-white/[0.02] p-4 sm:p-5">
-                  <p className="text-[0.58rem] sm:text-[0.6rem] font-bold uppercase tracking-[0.3em] text-cyan-400">
+                  <p className="text-sm font-bold uppercase tracking-[0.2em] text-cyan-400">
                     Key Highlights
                   </p>
                   <ul className="mt-2.5 sm:mt-3 space-y-2 sm:space-y-2.5">
                     {activeProject.highlights.map((h) => (
-                      <li key={h} className="flex gap-2.5 text-xs leading-relaxed text-slate-300">
+                      <li key={h} className="flex gap-2.5 text-base leading-relaxed text-slate-300">
                         <span
                           className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full"
                           style={{ background: activeProject.accent }}
@@ -246,14 +275,14 @@ export default function ProjectsSection() {
 
                 {/* Tech Stack Badges */}
                 <div className="mt-4 rounded-2xl border border-white/10 bg-white/[0.02] p-4 sm:p-5">
-                  <p className="text-[0.58rem] sm:text-[0.6rem] font-bold uppercase tracking-[0.3em] text-cyan-400">
+                  <p className="text-sm font-bold uppercase tracking-[0.2em] text-cyan-400">
                     Technologies Used
                   </p>
                   <div className="mt-2.5 sm:mt-3 flex flex-wrap gap-1.5 sm:gap-2">
                     {activeProject.tech.map((t) => (
                       <span
                         key={t}
-                        className="rounded-full border border-cyan-500/20 bg-cyan-950/40 px-2.5 sm:px-3 py-0.5 sm:py-1 text-[0.6rem] sm:text-[0.65rem] font-medium uppercase tracking-wider text-cyan-300"
+                        className="rounded-full border border-cyan-500/20 bg-cyan-950/40 px-3 py-1 text-sm font-medium text-cyan-300"
                       >
                         {t}
                       </span>
@@ -269,7 +298,7 @@ export default function ProjectsSection() {
                         href={link.href}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="rounded-full border border-cyan-400/35 bg-cyan-500/10 px-5 py-2 text-xs font-semibold uppercase tracking-wider text-cyan-200 transition hover:border-cyan-300 hover:bg-cyan-500/20 active:scale-[0.98]"
+                        className="inline-flex min-h-11 items-center rounded-full border border-cyan-400/35 bg-cyan-500/10 px-5 py-2 text-sm font-semibold tracking-wide text-cyan-200 transition hover:border-cyan-300 hover:bg-cyan-500/20 active:scale-[0.98]"
                       >
                         {link.label} ↗
                       </a>
@@ -282,7 +311,7 @@ export default function ProjectsSection() {
                   <button
                     type="button"
                     onClick={() => setActiveSlug(null)}
-                    className="rounded-full border border-white/15 bg-white/5 px-4 sm:px-5 py-1.5 sm:py-2 text-xs font-semibold uppercase tracking-wider text-slate-300 hover:border-white/30 hover:text-white"
+                    className="min-h-11 rounded-full border border-white/15 bg-white/5 px-5 py-2 text-sm font-semibold tracking-wide text-slate-300 hover:border-white/30 hover:text-white"
                   >
                     Close
                   </button>

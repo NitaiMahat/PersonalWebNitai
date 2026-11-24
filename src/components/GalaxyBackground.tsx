@@ -128,6 +128,15 @@ function ParticleGalaxy() {
 
 export default function GalaxyBackground() {
   const reduce = useReducedMotion();
+  const [touchInput, setTouchInput] = useState(false);
+
+  useEffect(() => {
+    const query = window.matchMedia("(pointer: coarse)");
+    const sync = () => setTouchInput(query.matches);
+    sync();
+    query.addEventListener("change", sync);
+    return () => query.removeEventListener("change", sync);
+  }, []);
 
   // Pause the galaxy once the hero scrolls off-screen so it doesn't keep
   // burning frames behind the rest of the page.
@@ -145,7 +154,7 @@ export default function GalaxyBackground() {
   }, []);
 
   return (
-    <div ref={wrapRef} className="absolute inset-0 z-0 cursor-grab active:cursor-grabbing">
+    <div ref={wrapRef} className="galaxy-background absolute inset-0 z-0 cursor-grab active:cursor-grabbing">
       {/* Zoomed-in, oblique view. OrbitControls = drag to orbit, scroll to zoom. */}
       <Canvas
         camera={{ position: [0, 3, 6], fov: 60 }}
@@ -161,6 +170,7 @@ export default function GalaxyBackground() {
           makeDefault
           enablePan={false}
           enableZoom={false}
+          enableRotate={!touchInput}
           enableDamping
           dampingFactor={0.08}
           rotateSpeed={0.6}
@@ -175,7 +185,7 @@ export default function GalaxyBackground() {
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_75%_65%_at_50%_50%,transparent_45%,var(--background)_100%)]" />
 
       {/* Discoverability hint */}
-      <div className="pointer-events-none absolute bottom-6 left-6 z-10 flex items-center gap-2 text-[0.7rem] uppercase tracking-[0.2em] text-muted/70">
+      <div className="pointer-events-none absolute bottom-6 left-6 z-10 hidden items-center gap-2 text-[0.7rem] uppercase tracking-[0.2em] text-muted/70 [@media(pointer:fine)]:flex">
         <span className="inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-accent-soft" />
         Drag to orbit
       </div>

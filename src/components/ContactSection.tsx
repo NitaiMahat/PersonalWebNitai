@@ -104,7 +104,7 @@ function ChannelCard({ channel, index }: { channel: Channel; index: number }) {
         <p className="font-display text-[0.62rem] uppercase tracking-[0.28em] text-white/40">
           {channel.label}
         </p>
-        <p className="mt-1 truncate font-display text-[0.95rem] font-semibold text-white/90 transition-colors duration-300 group-hover:text-white">
+        <p className="mt-1 break-words font-display text-base font-semibold text-white/90 transition-colors duration-300 group-hover:text-white">
           {channel.value}
         </p>
       </div>

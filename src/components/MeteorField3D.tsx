@@ -1,6 +1,6 @@
 "use client";
 
-import { Canvas, useFrame, type ThreeEvent } from "@react-three/fiber";
+import { Canvas, useFrame, useThree, type ThreeEvent } from "@react-three/fiber";
 import { OrbitControls, Stars, Sparkles, Float, Html, useTexture } from "@react-three/drei";
 import { useReducedMotion } from "motion/react";
 import { Suspense, useEffect, useMemo, useRef, useState } from "react";
@@ -24,29 +24,59 @@ const TEX = {
 /* ── Base 3D Celestial Coordinates ───────────────────────────────────── */
 const CELESTIAL_POSITIONS: Record<string, [number, number, number]> = {
   "atlas-jobs": [0, 0, 0],                        // Center Sun Star
-  "paila": [5.2, -1.2, 1.8],                     // Navigation world
+  "paila": [3.1, 4.0, 1.8],                     // Navigation world
   "expense-tracker-application": [-2.2, 4.2, -1.0],// Top-left Ice Crystal
   "earth-twin": [3.6, -1.2, 1.8],                 // Lower-right Earth Globe
   "course-planning-assistant": [7.4, 2.8, -1.2],   // Far top-right Book Cluster
   "gus-marketplace": [1.2, -4.5, 2.2],            // Lower-center Saturn
-  "hospital-management-system": [9.8, 0.6, -1.8], // Far right Moon
+  "hospital-management-system": [9.8, -0.8, -1.8], // Far right Moon
   "real-time-chat-application": [7.8, -4.2, 1.2],   // Far lower-right Cyber Chat Globe
   "used-car-price-prediction": [-7.2, -2.5, 1.2], // Mid-left Mars
   "clustering-research-paper": [-9.8, 1.2, -1.8],  // Far left Jupiter
   "screen-recorder-project": [-4.8, -5.8, 2.4],    // Far bottom-left Satellite
 };
 
-function getPositionForProject(slug: string, index: number, _total: number, isMobile: boolean): [number, number, number] {
+function getPositionForProject(slug: string, index: number, total: number, columns: number): [number, number, number] {
+  if (columns > 0) {
+    const rows = Math.ceil(total / columns);
+    const row = Math.floor(index / columns);
+    const itemsInRow = Math.min(columns, total - row * columns);
+    return [(index % columns - (itemsInRow - 1) / 2) * 5.6, ((rows - 1) / 2 - row) * 5.4, 0];
+  }
   const base = CELESTIAL_POSITIONS[slug] || [
     Math.cos(index * 2.4) * Math.sqrt(index + 0.5) * 4.2,
     Math.sin(index * 2.4) * Math.sqrt(index + 0.5) * 2.4,
     0
   ];
-  // On mobile portrait screens, scale coordinates slightly inward so all planets fit within vertical viewport
-  if (isMobile) {
-    return [base[0] * 0.68, base[1] * 0.78, base[2] * 0.7];
-  }
   return base;
+}
+
+function SceneCamera({ projects, columns }: { projects: Project[]; columns: number }) {
+  const { camera, size, controls, invalidate } = useThree();
+
+  useEffect(() => {
+    if (!(camera instanceof THREE.PerspectiveCamera) || size.width === 0) return;
+    const positions = projects.map((project, index) => getPositionForProject(project.slug, index, projects.length, columns));
+    const xs = positions.map((position) => position[0]);
+    const ys = positions.map((position) => position[1]);
+    const minX = Math.min(0, ...xs) - 2.8;
+    const maxX = Math.max(0, ...xs) + 2.8;
+    const minY = Math.min(0, ...ys) - 4.5;
+    const maxY = Math.max(0, ...ys) + 2.5;
+    const centerX = (minX + maxX) / 2;
+    const centerY = (minY + maxY) / 2;
+    const tanFov = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));
+    const distance = Math.max((maxY - minY) / 2 / tanFov, (maxX - minX) / 2 / tanFov / (size.width / size.height)) + 2;
+    camera.position.set(centerX, centerY, Math.max(columns ? 0 : 22, distance));
+    camera.lookAt(centerX, centerY, 0);
+    camera.updateProjectionMatrix();
+    if (controls && "target" in controls) {
+      (controls.target as THREE.Vector3).set(centerX, centerY, 0);
+    }
+    invalidate();
+  }, [camera, controls, size.width, size.height, columns, projects, invalidate]);
+
+  return null;
 }
 
 /* ── 3D Concentric Elliptical Orbital Grid Floor ─────────────────────── */
@@ -594,16 +624,17 @@ interface MeteorProps {
   selected: boolean;
   reduce: boolean;
   isMobile: boolean;
+  columns: number;
   onSelect: (slug: string) => void;
 }
 
-function Meteor({ project, index, total, selected, reduce, isMobile, onSelect }: MeteorProps) {
+function Meteor({ project, index, total, selected, reduce, isMobile, columns, onSelect }: MeteorProps) {
   const groupRef = useRef<THREE.Group>(null);
   const [hovered, setHovered] = useState(false);
 
   const position = useMemo(
-    () => getPositionForProject(project.slug, index, total, isMobile),
-    [project.slug, index, total, isMobile]
+    () => getPositionForProject(project.slug, index, total, columns),
+    [project.slug, index, total, columns]
   );
 
   const active = hovered || selected;
@@ -626,7 +657,7 @@ function Meteor({ project, index, total, selected, reduce, isMobile, onSelect }:
         onPointerOut={() => setHovered(false)}
         onClick={(e: ThreeEvent<MouseEvent>) => {
           e.stopPropagation();
-          onSelect(project.slug);
+          if (e.delta <= 8) onSelect(project.slug);
         }}
       >
         {active && (
@@ -650,31 +681,35 @@ function Meteor({ project, index, total, selected, reduce, isMobile, onSelect }:
         <CelestialBody slug={project.slug} active={active} />
 
         <Html
-          position={[0, -1.35, 0]}
+          position={[0, -2.6, 0]}
           center
-          distanceFactor={isMobile ? 15 : 11}
           pointerEvents="none"
           zIndexRange={[20, 0]}
         >
-          <div className="relative pointer-events-none select-none text-center transition-all duration-300">
+          <button
+            type="button"
+            onClick={() => onSelect(project.slug)}
+            aria-label={`View ${project.name} project details`}
+            className="planet-label pointer-events-auto relative block min-h-11 w-[min(10rem,40vw)] cursor-pointer select-none rounded-xl px-1 py-1 text-center"
+          >
             <p
-              className="text-[0.52rem] sm:text-[0.55rem] font-bold uppercase tracking-[0.32em]"
+              className="text-xs font-bold uppercase tracking-[0.18em]"
               style={{ color: project.accent, textShadow: `0 0 14px ${project.accent}88` }}
             >
               {project.status}
             </p>
             <h3
-              className="mt-0.5 font-display text-[0.92rem] sm:text-[1.05rem] font-bold leading-tight text-white whitespace-nowrap"
+              className="mt-1 font-display text-sm font-bold leading-snug text-white"
               style={{ textShadow: "0 2px 16px rgba(0,0,0,0.95)" }}
             >
               {project.name}
             </h3>
 
-            <div className="mt-1 flex justify-center gap-1">
+            <div className="mt-1 flex flex-wrap justify-center gap-1">
               {project.tech.slice(0, isMobile ? 2 : 3).map((item) => (
                 <span
                   key={item}
-                  className="rounded-full border border-white/15 bg-slate-950/80 px-2 py-0.5 text-[0.5rem] sm:text-[0.54rem] uppercase tracking-wider text-slate-200 backdrop-blur-md"
+                  className="rounded-full border border-white/15 bg-slate-950/80 px-2 py-0.5 text-xs text-slate-200 backdrop-blur-md"
                 >
                   {item}
                 </span>
@@ -682,7 +717,7 @@ function Meteor({ project, index, total, selected, reduce, isMobile, onSelect }:
             </div>
 
             {hovered && <HoloCodeCard project={project} isMobile={isMobile} />}
-          </div>
+          </button>
         </Html>
       </group>
     </Float>
@@ -706,22 +741,20 @@ export default function MeteorField3D({
   const wrapRef = useRef<HTMLDivElement>(null);
   const [onScreen, setOnScreen] = useState(true);
 
-  // Responsive Device Detection (Mobile / Tablet / Desktop)
-  const [windowWidth, setWindowWidth] = useState<number>(1200);
+  const [width, setWidth] = useState(0);
+  const [orbiting, setOrbiting] = useState(false);
 
   useEffect(() => {
-    const frame = window.requestAnimationFrame(() => setWindowWidth(window.innerWidth));
-    const handleResize = () => setWindowWidth(window.innerWidth);
-    window.addEventListener("resize", handleResize);
-    return () => {
-      window.cancelAnimationFrame(frame);
-      window.removeEventListener("resize", handleResize);
-    };
+    const element = wrapRef.current;
+    if (!element) return;
+    const observer = new ResizeObserver(([entry]) => setWidth(entry.contentRect.width));
+    observer.observe(element);
+    return () => observer.disconnect();
   }, []);
 
-  const isMobile = windowWidth < 640;
-  const isTablet = windowWidth >= 640 && windowWidth < 1024;
-  const cameraZ = isMobile ? 36 : isTablet ? 27 : 22;
+  const columns = width < 600 ? 2 : width < 1000 ? 3 : 0;
+  const isMobile = columns > 0;
+  const rows = Math.ceil(projects.length / (columns || 1));
 
   useEffect(() => {
     const el = wrapRef.current;
@@ -732,57 +765,76 @@ export default function MeteorField3D({
   }, []);
 
   return (
-    <div ref={wrapRef} className="relative h-[78vh] sm:h-[82vh] md:h-[85vh] min-h-[500px] sm:min-h-[600px] md:min-h-[660px] w-full cursor-grab active:cursor-grabbing touch-none">
-      <Canvas
-        camera={{ position: [0, 0, cameraZ], fov: isMobile ? 48 : 45 }}
-        dpr={isMobile ? [1, 1] : [1, 1.5]}
-        frameloop={onScreen ? "always" : "never"}
-        gl={{ alpha: true, antialias: !isMobile, powerPreference: "high-performance" }}
-        style={{ background: "transparent" }}
-      >
-        <ambientLight intensity={0.6} color="#475569" />
-        <directionalLight position={[10, 12, 10]} intensity={3.2} color="#fff7ed" />
-        <directionalLight position={[-10, -6, -8]} intensity={1.4} color="#1e3a8a" />
+    <div
+      ref={wrapRef}
+      className="planet-stage relative w-full"
+      style={{ height: width && columns ? Math.max(400, ((rows - 1) * 5.4 + 7) * width / (columns * 5.6) + 120) : "clamp(660px, 85svh, 1000px)" }}
+    >
+      {isMobile && (
+        <div className="relative z-30 flex flex-wrap items-center justify-between gap-3 py-4">
+          <p className="text-sm text-slate-300">Tap a planet to explore its project.</p>
+          <button type="button" aria-pressed={orbiting} onClick={() => setOrbiting((value) => !value)} className="min-h-11 rounded-full border border-cyan-400/30 bg-slate-950/80 px-4 text-sm text-cyan-200">
+            {orbiting ? "Done rotating" : "Rotate the scene"}
+          </button>
+        </div>
+      )}
+      <div className={`absolute inset-x-0 bottom-0 ${isMobile ? "top-24" : "top-0"} ${!isMobile || orbiting ? "cursor-grab active:cursor-grabbing" : "planet-scroll-surface"}`}>
+        {width > 0 && (
+          <Canvas
+            camera={{ position: [0, 0, 22], fov: 45 }}
+            dpr={[1, 2]}
+            frameloop={!onScreen ? "never" : reduce ? "demand" : "always"}
+            gl={{ alpha: true, antialias: true, powerPreference: "high-performance" }}
+            style={{ background: "transparent" }}
+          >
+            <ambientLight intensity={0.6} color="#475569" />
+            <SceneCamera projects={projects} columns={columns} />
+            <directionalLight position={[10, 12, 10]} intensity={3.2} color="#fff7ed" />
+            <directionalLight position={[-10, -6, -8]} intensity={1.4} color="#1e3a8a" />
 
-        <Suspense fallback={null}>
-          <OrbitalGrid isMobile={isMobile} />
+            <Suspense fallback={null}>
+              <OrbitalGrid isMobile={isMobile} />
 
-          {projects.map((project, index) => (
-            <Meteor
-              key={project.slug}
-              project={project}
-              index={index}
-              total={projects.length}
-              selected={selectedSlug === project.slug}
-              reduce={reduce}
-              isMobile={isMobile}
-              onSelect={onSelect}
+              {projects.map((project, index) => (
+                <Meteor
+                  key={project.slug}
+                  project={project}
+                  index={index}
+                  total={projects.length}
+                  selected={selectedSlug === project.slug}
+                  reduce={reduce}
+                  isMobile={isMobile}
+                  columns={columns}
+                  onSelect={onSelect}
+                />
+              ))}
+
+              <Sparkles count={isMobile ? 30 : 50} scale={[30, 20, 15]} size={isMobile ? 2 : 3} speed={reduce ? 0 : 0.35} opacity={0.65} color="#e0f2fe" />
+              <Stars radius={110} depth={60} count={isMobile ? 400 : 800} factor={4.5} fade speed={reduce ? 0 : 0.4} />
+            </Suspense>
+
+            <OrbitControls
+              makeDefault
+              enabled={!isMobile || orbiting}
+              enablePan={false}
+              enableZoom={false}
+              enableDamping={!reduce}
+              dampingFactor={0.08}
+              rotateSpeed={isMobile ? 0.6 : 0.45}
+              autoRotate={false}
+              minPolarAngle={Math.PI * (isMobile ? 0.44 : 0.28)}
+              maxPolarAngle={Math.PI * (isMobile ? 0.56 : 0.68)}
+              minAzimuthAngle={isMobile ? -0.18 : -0.6}
+              maxAzimuthAngle={isMobile ? 0.18 : 0.6}
+              touches={{ ONE: THREE.TOUCH.ROTATE, TWO: THREE.TOUCH.PAN }}
             />
-          ))}
+          </Canvas>
+        )}
+      </div>
 
-          <Sparkles count={isMobile ? 30 : 50} scale={[30, 20, 15]} size={isMobile ? 2 : 3} speed={reduce ? 0 : 0.35} opacity={0.65} color="#e0f2fe" />
-          <Stars radius={110} depth={60} count={isMobile ? 400 : 800} factor={4.5} fade speed={reduce ? 0 : 0.4} />
-        </Suspense>
-
-        <OrbitControls
-          makeDefault
-          enablePan={false}
-          enableZoom={false}
-          enableDamping
-          dampingFactor={0.08}
-          rotateSpeed={isMobile ? 0.6 : 0.45}
-          autoRotate={false}
-          minPolarAngle={Math.PI * 0.28}
-          maxPolarAngle={Math.PI * 0.68}
-          minAzimuthAngle={-0.6}
-          maxAzimuthAngle={0.6}
-          touches={{ ONE: THREE.TOUCH.ROTATE, TWO: THREE.TOUCH.PAN }}
-        />
-      </Canvas>
-
-      <div className="pointer-events-none absolute bottom-3 sm:bottom-4 left-1/2 z-10 flex -translate-x-1/2 items-center gap-2 rounded-full border border-white/10 bg-slate-950/75 px-3.5 sm:px-4 py-1.5 text-[0.55rem] sm:text-[0.62rem] uppercase tracking-[0.25em] sm:tracking-[0.3em] text-slate-200 backdrop-blur-md shadow-lg whitespace-nowrap">
+      <div className="pointer-events-none absolute bottom-3 left-1/2 z-10 flex w-max max-w-full -translate-x-1/2 items-center gap-2 rounded-full border border-white/10 bg-slate-950/75 px-4 py-2 text-center text-xs tracking-wide text-slate-200 backdrop-blur-md shadow-lg">
         <span className="inline-block h-1.5 w-1.5 animate-ping rounded-full bg-cyan-400" />
-        {isMobile ? "Swipe to Rotate · Tap a Planet" : "Drag to Orbit · Click a Planet"}
+        {isMobile ? orbiting ? "Drag to rotate · Tap a planet" : "Scroll to explore · Tap a planet" : "Drag to orbit · Click a planet"}
       </div>
     </div>
   );
