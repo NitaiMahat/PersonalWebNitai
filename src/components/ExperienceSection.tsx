@@ -1,7 +1,8 @@
 "use client";
 
-import { AnimatePresence, motion, useInView, useReducedMotion } from "motion/react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { motion, useInView, useReducedMotion } from "motion/react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import SpaceParticles from "@/components/SpaceParticles";
 
 type Exp = {
@@ -129,6 +130,119 @@ function buildPipe(pts: { x: number; y: number }[], r = 26) {
   return d;
 }
 
+function ExperiencePopover({ experience, anchorId, reduce, onEnter, onLeave, onDismiss }: {
+  experience: Exp;
+  anchorId: string;
+  reduce: boolean;
+  onEnter: () => void;
+  onLeave: () => void;
+  onDismiss: () => void;
+}) {
+  const cardRef = useRef<HTMLDivElement>(null);
+  const [position, setPosition] = useState<{ left: number; top: number } | null>(null);
+  const [scrollable, setScrollable] = useState(false);
+
+  useEffect(() => {
+    let wasInside = false;
+    const onMove = (event: PointerEvent) => {
+      const bounds = cardRef.current?.getBoundingClientRect();
+      if (!bounds) return;
+      const inside = event.clientX >= bounds.left && event.clientX <= bounds.right && event.clientY >= bounds.top && event.clientY <= bounds.bottom;
+      if (inside) onEnter();
+      else if (wasInside && !(event.target instanceof Element && event.target.closest("[data-experience-tile]"))) onLeave();
+      wasInside = inside;
+    };
+    window.addEventListener("pointermove", onMove);
+    return () => window.removeEventListener("pointermove", onMove);
+  }, [onEnter, onLeave]);
+
+  useLayoutEffect(() => {
+    const card = cardRef.current;
+    const anchor = document.getElementById(anchorId);
+    if (!card || !anchor) return;
+    let frame = 0;
+    const update = () => {
+      const tile = anchor.getBoundingClientRect();
+      const bounds = card.getBoundingClientRect();
+      setScrollable(card.scrollHeight > card.clientHeight + 1);
+      const viewportWidth = document.documentElement.clientWidth;
+      const viewportHeight = window.innerHeight;
+      if (tile.bottom < 0 || tile.top > viewportHeight) {
+        setPosition(null);
+        return;
+      }
+      const right = tile.right + 20;
+      const left = right + bounds.width <= viewportWidth - 16
+        ? right
+        : tile.left - bounds.width - 20;
+      const next = {
+        left: Math.max(16, Math.min(left, viewportWidth - bounds.width - 16)),
+        top: Math.max(16, Math.min(tile.top + tile.height / 2 - bounds.height / 2, viewportHeight - bounds.height - 16)),
+      };
+      setPosition((previous) => previous?.left === next.left && previous.top === next.top ? previous : next);
+    };
+    const schedule = () => {
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(update);
+    };
+    const observer = new ResizeObserver(schedule);
+    observer.observe(card);
+    observer.observe(anchor);
+    window.addEventListener("resize", schedule);
+    window.addEventListener("scroll", schedule, true);
+    update();
+    return () => {
+      cancelAnimationFrame(frame);
+      observer.disconnect();
+      window.removeEventListener("resize", schedule);
+      window.removeEventListener("scroll", schedule, true);
+    };
+  }, [anchorId]);
+
+  return (
+    <motion.div
+      ref={cardRef}
+      id="experience-popover"
+      role="region"
+      aria-labelledby="experience-popover-title"
+      onPointerEnter={onEnter}
+      onPointerLeave={onLeave}
+      className={`${scrollable ? "pointer-events-auto" : "pointer-events-none"} fixed z-40 w-96 max-w-[calc(100vw-2rem)] max-h-[calc(100dvh-2rem)] overflow-y-auto overscroll-contain rounded-2xl border bg-[#101019]/95 p-5 text-left shadow-[0_8px_40px_rgba(0,0,0,0.55)] backdrop-blur-xl`}
+      style={{ left: position?.left ?? 16, top: position?.top ?? 16, visibility: position ? "visible" : "hidden", borderColor: `${experience.color}66` }}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: reduce ? 0 : 0.14 }}
+    >
+      <div className="flex items-center justify-between gap-3">
+        <p className="text-sm font-semibold" style={{ color: experience.color }}>{experience.period}</p>
+        <button
+          type="button"
+          aria-label="Close experience details"
+          onClick={() => {
+            document.getElementById(anchorId)?.querySelector("button")?.focus({ preventScroll: true });
+            onDismiss();
+          }}
+          className="pointer-events-auto grid h-8 w-8 shrink-0 place-items-center rounded-full text-lg text-white/70 hover:bg-white/10 hover:text-white"
+        >
+          <span aria-hidden="true">×</span>
+        </button>
+      </div>
+      <h3 id="experience-popover-title" className="mt-2 font-display text-lg font-bold leading-snug text-white">{experience.role}</h3>
+      <p className="mt-1 text-sm text-white/80">{experience.org}</p>
+      <p className="mt-1 text-sm text-muted">{experience.location}</p>
+      <div className="my-3 h-px w-full bg-white/10" />
+      <ul className="space-y-3">
+        {experience.bullets.map((bullet) => (
+          <li key={bullet} className="flex gap-3 text-sm leading-6 text-muted">
+            <span className="mt-2.5 h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: experience.color }} />
+            <span>{bullet}</span>
+          </li>
+        ))}
+      </ul>
+    </motion.div>
+  );
+}
+
 export default function ExperienceSection() {
   const sectionRef = useRef<HTMLElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
@@ -142,7 +256,45 @@ export default function ExperienceSection() {
   const [hovered, setHovered] = useState<number | null>(null);
   const [selected, setSelected] = useState<number | null>(null);
   const [playing, setPlaying] = useState(false);
+  const [desktop, setDesktop] = useState(false);
+  const hoverCloseTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const interacted = useRef(false);
   const reduce = useReducedMotion();
+
+  useEffect(() => {
+    const query = window.matchMedia("(min-width: 1024px)");
+    const sync = () => setDesktop(query.matches);
+    sync();
+    query.addEventListener("change", sync);
+    return () => query.removeEventListener("change", sync);
+  }, []);
+
+  const keepOpen = useCallback(() => {
+    if (hoverCloseTimer.current) clearTimeout(hoverCloseTimer.current);
+    hoverCloseTimer.current = null;
+  }, []);
+
+  useEffect(() => keepOpen, [keepOpen]);
+
+  const hoverExperience = (index: number) => {
+    keepOpen();
+    interacted.current = true;
+    setActive(null);
+    setHovered(index);
+  };
+
+  const leaveExperience = useCallback(() => {
+    keepOpen();
+    hoverCloseTimer.current = setTimeout(() => setHovered(null), 160);
+  }, [keepOpen]);
+
+  const dismiss = useCallback(() => {
+    keepOpen();
+    interacted.current = true;
+    setActive(null);
+    setHovered(null);
+    setSelected(null);
+  }, [keepOpen]);
 
   useEffect(() => {
     const el = stageRef.current;
@@ -168,7 +320,7 @@ export default function ExperienceSection() {
     const timers = exps.map((_, i) =>
       setTimeout(() => {
         setLit((v) => Math.max(v, i + 1));
-        setActive(i);
+        if (!interacted.current) setActive(i);
       }, (reduce ? 0 : 400) + (i / (exps.length - 1)) * D)
     );
     const clear = setTimeout(() => setActive(null), 400 + D + 1200);
@@ -182,10 +334,29 @@ export default function ExperienceSection() {
   const mobileActive = selected ?? 0;
   const isLit = (i: number) => i < lit || i === hovered || i === selected;
 
+  useEffect(() => {
+    if (!desktop || displayActive === null) return;
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") dismiss();
+    };
+    const onOutside = (event: PointerEvent) => {
+      if (event.target instanceof Element && !event.target.closest("#experience-popover, [data-experience-tile]")) dismiss();
+    };
+    window.addEventListener("keydown", onKey);
+    window.addEventListener("pointerdown", onOutside);
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      window.removeEventListener("pointerdown", onOutside);
+    };
+  }, [desktop, displayActive, dismiss]);
+
   const selectExperience = (index: number) => {
+    keepOpen();
+    interacted.current = true;
+    setActive(null);
     setSelected(index);
     const scroller = scrollRef.current;
-    if (scroller) {
+    if (scroller && !desktop) {
       scroller.scrollTo({
         left: (exps[index].x / 100) * size.w - scroller.clientWidth / 2,
         behavior: reduce ? "instant" : "smooth",
@@ -209,18 +380,18 @@ export default function ExperienceSection() {
         A résumé-aligned timeline of the work, research, and fellowship experience behind my projects.
       </p>
 
-      <p id="experience-instructions" className="relative z-10 text-center text-sm text-muted min-[1200px]:hidden">
+      <p id="experience-instructions" className="relative z-10 text-center text-sm text-muted lg:hidden">
         Swipe through the timeline · Tap a tile to read its story
       </p>
       <div
         ref={scrollRef}
-        className="experience-scroll relative z-10 w-full max-w-6xl overflow-x-auto overscroll-x-contain"
+        className="experience-scroll relative z-10 w-full max-w-6xl overflow-x-auto overflow-y-hidden overscroll-x-contain lg:overflow-visible"
         role="region"
         aria-label="Work experience timeline"
         aria-describedby="experience-instructions"
         tabIndex={0}
       >
-        <div ref={stageRef} className="relative h-[480px] w-full min-w-[1152px] min-[1200px]:h-auto" style={{ aspectRatio: "16 / 8" }}>
+        <div ref={stageRef} className="relative h-[480px] w-full min-w-[1152px] lg:h-auto lg:min-w-0" style={{ aspectRatio: "16 / 8" }}>
           {size.w > 0 && (
             <svg className="pointer-events-none absolute inset-0 h-full w-full overflow-visible" viewBox={`0 0 ${size.w} ${size.h}`}>
               <defs>
@@ -257,6 +428,10 @@ export default function ExperienceSection() {
             return (
               <div
                 key={i}
+                id={`experience-tile-${i}`}
+                data-experience-tile
+                onPointerEnter={(event) => { if (event.pointerType !== "touch") hoverExperience(i); }}
+                onPointerLeave={leaveExperience}
                 className="absolute z-10"
                 style={{ left: `${e.x}%`, top: `${e.y}%`, transform: "translate(-50%,-50%)", perspective: "800px" }}
               >
@@ -267,17 +442,15 @@ export default function ExperienceSection() {
                 <motion.button
                   type="button"
                   data-cursor="view"
-                  onPointerEnter={(event) => { if (event.pointerType !== "touch") setHovered(i); }}
-                  onPointerLeave={() => setHovered(null)}
-                  onFocus={() => setHovered(i)}
-                  onBlur={() => setHovered(null)}
+                  onFocus={() => hoverExperience(i)}
+                  onBlur={leaveExperience}
                   onClick={() => selectExperience(i)}
                   className="pointer-events-auto relative block cursor-pointer"
                   animate={reduce ? undefined : { y: [0, -8, 0] }}
                   transition={{ duration: 4 + i * 0.4, repeat: Infinity, ease: "easeInOut", delay: i * 0.3 }}
                   aria-label={`${e.role} at ${e.org}`}
                   aria-pressed={selected === i}
-                  aria-controls="experience-details"
+                  aria-controls={desktop ? "experience-popover" : "experience-details"}
                 >
                   <div style={{ transform: "rotateX(22deg)", transformStyle: "preserve-3d" }}>
                     <div className="absolute inset-0 rounded-[1.3rem]" style={{ transform: "translateZ(-18px)", background: "#050507" }} />
@@ -307,48 +480,22 @@ export default function ExperienceSection() {
             );
           })}
 
-          <AnimatePresence mode="wait">
-            {displayActive !== null && isLit(displayActive) && (
-              <motion.div
-                key={displayActive}
-                className="pointer-events-none absolute z-30 hidden w-72 min-[1200px]:block"
-                style={{
-                  left: exps[displayActive].x < 50 ? `calc(${exps[displayActive].x}% + 90px)` : `calc(${exps[displayActive].x}% - 90px)`,
-                  top: `${exps[displayActive].y}%`,
-                  transform: exps[displayActive].x < 50 ? "translateY(-50%)" : "translate(-100%,-50%)",
-                }}
-                initial={{ opacity: 0, scale: 0.92 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.92 }}
-                transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
-              >
-                <div className="rounded-2xl border bg-white/[0.07] p-5 text-left shadow-[0_8px_40px_rgba(0,0,0,0.55)] backdrop-blur-xl" style={{ borderColor: `${exps[displayActive].color}55` }}>
-                  <div className="flex items-center justify-between">
-                    <span className="font-display text-[0.65rem] uppercase tracking-[0.2em]" style={{ color: exps[displayActive].color }}>
-                      {exps[displayActive].period}
-                    </span>
-                    <span className="h-1.5 w-1.5 rounded-full" style={{ background: exps[displayActive].color }} />
-                  </div>
-                  <h3 className="mt-2 font-display text-base font-bold leading-snug text-white">{exps[displayActive].role}</h3>
-                  <p className="text-sm text-white/80">{exps[displayActive].org}</p>
-                  <p className="text-[0.7rem] text-muted">{exps[displayActive].location}</p>
-                  <div className="my-3 h-px w-full bg-white/10" />
-                  <ul className="space-y-2">
-                    {exps[displayActive].bullets.map((b, bi) => (
-                      <li key={bi} className="flex gap-2 text-[0.78rem] leading-relaxed text-muted">
-                        <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full" style={{ background: exps[displayActive].color }} />
-                        {b}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
         </div>
       </div>
 
-      <div className="relative z-10 mt-6 w-full max-w-xl min-[1200px]:hidden">
+      {desktop && displayActive !== null && isLit(displayActive) && createPortal(
+        <ExperiencePopover
+          experience={exps[displayActive]}
+          anchorId={`experience-tile-${displayActive}`}
+          reduce={reduce ?? false}
+          onEnter={keepOpen}
+          onLeave={leaveExperience}
+          onDismiss={dismiss}
+        />,
+        document.body
+      )}
+
+      <div className="relative z-10 mt-6 w-full max-w-xl lg:hidden">
         <div className="mb-4 flex items-center justify-between gap-3">
           <button type="button" onClick={() => selectExperience(Math.max(0, mobileActive - 1))} disabled={mobileActive === 0} className="min-h-11 rounded-full border border-white/15 px-4 text-sm text-white/80 disabled:opacity-30" aria-label="Previous experience">Previous</button>
           <span className="text-sm text-muted">{mobileActive + 1} / {exps.length}</span>
@@ -370,8 +517,8 @@ export default function ExperienceSection() {
         </article>
       </div>
 
-      <p className="relative z-10 mt-10 hidden text-sm tracking-wide text-muted min-[1200px]:block">
-        Hover or select a tile to revisit its story
+      <p className="relative z-10 mt-10 hidden text-center text-sm tracking-wide text-muted lg:block">
+        Hover to read · Click to keep details open · Esc to close
       </p>
     </section>
   );
